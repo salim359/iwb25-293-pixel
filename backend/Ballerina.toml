@@ -6,3 +6,8 @@ distribution = "2201.12.6"
 
 [build-options]
 observabilityIncluded = true
+
+[[dependency]]
+org = "ballerinax"
+name = "mysql"
+version = "1.10.0"
