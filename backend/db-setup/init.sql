@@ -3,7 +3,7 @@ CREATE TABLE users (
     username VARCHAR(255) UNIQUE NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
-    created_at DATETIME NOT NULL
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE pdf_documents (
@@ -14,6 +14,16 @@ CREATE TABLE pdf_documents (
     extracted_text TEXT,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
+
+
+CREATE TABLE pdf_summaries (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    pdf_id INT NOT NULL,
+    summary TEXT NOT NULL,
+    generated_at DATETIME NOT NULL,
+    FOREIGN KEY (pdf_id) REFERENCES pdf_documents(id)
+);
+
 
 CREATE TABLE topics (
     id INT AUTO_INCREMENT PRIMARY KEY,
