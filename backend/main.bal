@@ -1,6 +1,4 @@
 import ballerina/http;
-
-
 type Pixel service object {
     *http:InterceptableService;
 

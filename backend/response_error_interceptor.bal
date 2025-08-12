@@ -11,7 +11,7 @@ service class ResponseErrorInterceptor {
         
         // Set JSON payload with error details
         json payload = {
-            message: "Internal Server Error",
+            message: "Internal Server Error ",
             details: err.message()
         };
         resp.setJsonPayload(payload);
@@ -21,7 +21,7 @@ service class ResponseErrorInterceptor {
 }
 
 // Sample HTTP service to demonstrate the interceptor
-service /api on new http:Listener(9090) {
+service /api on new http:Listener(8081) {
     // Attach the interceptor
     final ResponseErrorInterceptor errorInterceptor = new;
 

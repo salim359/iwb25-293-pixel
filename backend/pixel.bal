@@ -26,7 +26,7 @@ type User record {|
         message: "UserName can have atmost 12 characters"
     }
 }
-type Username string;
+public type Username string;
 
 @constraint:String {
     pattern: {
@@ -35,7 +35,7 @@ type Username string;
     }
 }
 
-type Email string;
+public type Email string;
 
 @constraint:String {
     minLength: {
@@ -49,7 +49,7 @@ type Email string;
 }
 type Password string;
 
-type NewUser record {|
+public type NewUser record {|
 
     Username username;
     Email email;
@@ -73,7 +73,7 @@ type NotFoundError record {|
     ErrorDetails body;
 |};
 
-type LoginRequest record {|
+public type LoginRequest record {|
     string email;
     string password;
 |};
@@ -128,7 +128,7 @@ function Authorization(http:Request req) returns jwt:Payload|UnauthorizedError {
         audience: "pixelAi-users",
         clockSkew: 60,
         signatureConfig: {
-            certFile: "config/cert.pem"
+            certFile: "./resources/cert.pem"
         }
     };
 
@@ -146,15 +146,17 @@ function Authorization(http:Request req) returns jwt:Payload|UnauthorizedError {
     }
     return result;
 }
+
 listener http:Listener pixelListener = new (8080);
 
-service  Pixel /pixel on pixelListener {
+service Pixel /pixel on pixelListener {
 
- public function createInterceptors() returns ResponseErrorInterceptor {
+    public function createInterceptors() returns ResponseErrorInterceptor {
         return new ResponseErrorInterceptor();
     }
-resource function get users() returns User[]|error {
-      stream<User, sql:Error?> userStream =
+
+    resource function get users() returns User[]|error {
+        stream<User, sql:Error?> userStream =
             dbClient->query(`SELECT * FROM users`, User);
 
         return from var user in userStream
@@ -221,8 +223,8 @@ resource function get users() returns User[]|error {
             };
             return unauthorizederror;
         }
-        // ../../config/private.key from running from services 
-        crypto:PrivateKey privateKey = check crypto:decodeRsaPrivateKeyFromKeyFile("config/private.key");
+
+        crypto:PrivateKey privateKey = check crypto:decodeRsaPrivateKeyFromKeyFile("./resources/private.key");
 
         // Generate JWT
         jwt:IssuerConfig issuerConfig = {
@@ -574,29 +576,27 @@ resource function get users() returns User[]|error {
             json|error message = firstChoice.message;
             if message is json {
                 json|error topics = message.content;
+                json[] parsed;
                 if topics is json[] {
-                    // Validate that topics is an array of objects with required fields
-                    foreach var topic in topics {
-                        if topic is map<json> && topic.hasKey("title") && topic.hasKey("start_pos") && topic.hasKey("end_pos") {
-                            // Valid topic
-                        } else {
-                            return error("Invalid topic format in OpenAI response");
-                        }
+                    parsed = <json[]>topics;
+                } else if topics is string {
+                    json|error temp = checkpanic jsonutils:fromJSON(topics);
+                    if temp is json[] {
+                        parsed = temp;
+                    } else {
+                        return error("Topics content is not a valid JSON array");
                     }
-
-                    // Insert topics into the database
-                    foreach var topic in topics {
-                        map<json> topicMap = <map<json>>topic;
-                        string title = <string>topicMap["title"];
-                        int startPos = <int>topicMap["start_pos"];
-                        int endPos = <int>topicMap["end_pos"];
-                        _ = check dbClient->execute(`INSERT INTO pdf_topics (pdf_id, title, start_pos, end_pos) VALUES (${id}, ${title}, ${startPos}, ${endPos})`);
-                    }
-                    return {"topics": topics};
                 } else {
                     return error("Topics content is not a valid JSON array");
                 }
-            } else {
+                json[] topicRows = [];
+                foreach var item in parsed {
+                    topicRows.push(item);
+                }
+                return topicRows;
+            }
+
+            else {
                 return error("Message field is missing or invalid");
             }
         } else {
