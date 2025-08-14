@@ -11,3 +11,4 @@ observabilityIncluded = true
 org = "ballerinax"
 name = "mysql"
 version = "1.10.0"
+

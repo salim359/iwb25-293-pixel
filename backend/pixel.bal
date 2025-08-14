@@ -1,6 +1,7 @@
 import ballerina/constraint;
 import ballerina/crypto;
 import ballerina/http;
+import ballerina/io;
 import ballerina/jwt;
 import ballerina/mime;
 import ballerina/sql;
@@ -83,7 +84,6 @@ type LoginResponse record {|
 |};
 
 configurable string pdf_extractor_api_key = ?;
-configurable string openAiToken = ?;
 
 type PdfText record {|
     int user_id;
@@ -92,6 +92,42 @@ type PdfText record {|
     string extracted_text;
 
 |};
+
+type Topic record {|
+    readonly int id;
+    readonly int pdf_id;
+    string title;
+    string description;
+|};
+
+type TopicTitle record {|
+    readonly int id;
+    string title;
+|};
+
+type Quiz record {|
+    int id;
+    int quiz_id;
+    string question_text;
+    string question_type;
+    string options;
+    string correct_answer;
+    string created_at;
+|};
+
+type Flashcard record {|
+    int id;
+    int topic_id;
+    string term;
+    string definition;
+|};
+
+type ModelConfig record {|
+    string openAiToken;
+    string model;
+|};
+
+configurable ModelConfig modelConfig = ?;
 
 type DataBaseConfig record {|
     string host;
@@ -145,6 +181,42 @@ function Authorization(http:Request req) returns jwt:Payload|UnauthorizedError {
         return unauthorizedError;
     }
     return result;
+}
+
+function ExtractedText(int? userId, int pdfId) returns UnauthorizedError|string {
+
+    // Check if the user has access to the PDF document
+    string|sql:Error pdfTextResult = dbClient->queryRow(`SELECT extracted_text FROM pdf_documents WHERE user_id = ${userId} and id = ${pdfId}`);
+
+    if pdfTextResult is sql:Error {
+        UnauthorizedError unauthorizedError = {
+            body: {
+                message: "Unauthorized access",
+                details: "You do not have permission to access this PDF document",
+                timestamp: time:utcNow()
+            }
+        };
+        return unauthorizedError;
+    }
+    return pdfTextResult;
+}
+
+function ExtractedTopic(int topicId) returns NotFoundError|string {
+
+    Topic|sql:Error topicExists = dbClient->queryRow(`SELECT * FROM topics WHERE id = ${topicId}`);
+    if topicExists is sql:Error {
+        NotFoundError notFoundError = {
+            body: {
+                message: "Topic not found",
+                details: "No topic exists with the given ID",
+                timestamp: time:utcNow()
+            }
+        };
+        return notFoundError;
+    }
+    string description = topicExists.description;
+    return description;
+
 }
 
 listener http:Listener pixelListener = new (8080);
@@ -343,55 +415,25 @@ service Pixel /pixel on pixelListener {
         int? userId = <int?>authResult["user_id"];
 
         // validate that userid is the one who uploaded the PDF
-        // Check if PDF exists
-        int|sql:Error pdfExists = dbClient->queryRow(`SELECT user_id FROM pdf_documents WHERE id = ${id}`);
+        string|UnauthorizedError pdfTextResult = ExtractedText(userId, id);
+        if pdfTextResult is UnauthorizedError {
+            return pdfTextResult;
+        }
 
-        if pdfExists is sql:Error {
-            NotFoundError notFoundError = {
-                body: {
-                    message: "PDF document not found",
-                    details: "No PDF document exists with the given ID",
-                    timestamp: time:utcNow()
-                }
-            };
-            return notFoundError;
-        }
-        else {
-            if pdfExists != userId {
-                UnauthorizedError unauthorizedError = {
-                    body: {
-                        message: "Unauthorized access",
-                        details: "You do not have permission to access this PDF document",
-                        timestamp: time:utcNow()
-                    }
-                };
-                return unauthorizedError;
-            }
-        }
-        // Now fetch extracted_text
-        string|sql:Error pdfTextResult = dbClient->queryRow(`SELECT extracted_text FROM pdf_documents WHERE id = ${id}`);
-        if pdfTextResult is sql:Error {
-            NotFoundError notFoundError = {
-                body: {
-                    message: "PDF document not found",
-                    details: "No PDF document exists with the given ID",
-                    timestamp: time:utcNow()
-                }
-            };
-            return notFoundError;
-        }
+        string extractedText = <string>pdfTextResult;
+
         // Initialize OpenAI client
         final http:Client openAIClient = check new ("https://api.openai.com/v1", {
             auth: {
-                token: openAiToken
+                token: modelConfig.openAiToken
             },
             timeout: 30 // Added timeout for robustness
         });
 
         // Prepare OpenAI request
-        string prompt = "Summarize the following text:\n" + pdfTextResult;
+        string prompt = "Summarize the following text:\n" + extractedText;
         json openAIReq = {
-            "model": "gpt-4-turbo",
+            "model": modelConfig.model,
             "messages": [
                 {"role": "system", "content": "You are a helpful assistant that summarizes text concisely."},
                 {"role": "user", "content": prompt}
@@ -458,27 +500,9 @@ service Pixel /pixel on pixelListener {
 
         //validate that userid is the one who uploaded the PDF
         // Check if PDF exists
-        int|sql:Error pdfExists = dbClient->queryRow(`SELECT user_id FROM pdf_documents WHERE id = ${id}`);
-        if pdfExists is sql:Error {
-            NotFoundError notFoundError = {
-                body: {
-                    message: "PDF document not found",
-                    details: "No PDF document exists with the given ID",
-                    timestamp: time:utcNow()
-                }
-            };
-            return notFoundError;
-        } else {
-            if pdfExists != userId {
-                UnauthorizedError unauthorizedError = {
-                    body: {
-                        message: "Unauthorized access",
-                        details: "You do not have permission to access this PDF document",
-                        timestamp: time:utcNow()
-                    }
-                };
-                return unauthorizedError;
-            }
+        string|UnauthorizedError pdfTextResult = ExtractedText(userId, id);
+        if pdfTextResult is UnauthorizedError {
+            return pdfTextResult;
         }
 
         // Fetch the summary from the database
@@ -504,46 +528,22 @@ service Pixel /pixel on pixelListener {
         }
         int? userId = <int?>authResult["user_id"];
 
-        int|sql:Error pdfExists = dbClient->queryRow(`SELECT user_id FROM pdf_documents WHERE id = ${id}`);
-
-        if pdfExists is sql:Error {
-            NotFoundError notFoundError = {
-                body: {
-                    message: "PDF document not found",
-                    details: "No PDF document exists with the given ID",
-                    timestamp: time:utcNow()
-                }
-            };
-            return notFoundError;
-        } else {
-            if pdfExists != userId {
-                UnauthorizedError unauthorizedError = {
-                    body: {
-                        message: "Unauthorized access",
-                        details: "You do not have permission to access this PDF document",
-                        timestamp: time:utcNow()
-                    }
-                };
-                return unauthorizedError;
-            }
+        string|UnauthorizedError pdfTextResult = ExtractedText(userId, id);
+        if pdfTextResult is UnauthorizedError {
+            return pdfTextResult;
         }
 
-        // Fetch extracted text
-        string|sql:Error pdfTextResult = dbClient->queryRow(`SELECT extracted_text FROM pdf_documents WHERE id = ${id}`);
-        if pdfTextResult is sql:Error {
-            NotFoundError notFoundError = {
-                body: {
-                    message: "PDF document not found",
-                    details: "No PDF document exists with the given ID",
-                    timestamp: time:utcNow()
+        string prompt = string `Extract all section or topic titles from the following text. For each title, provide a concise description of the topic. Return ONLY a valid JSON array, no explanation, no markdown, no code block. Example format:
+            [
+                {
+                    "title": "Sample Title",
+                    "description": "This is a sample description."
                 }
-            };
-            return notFoundError;
-        }
-
-        string prompt = "Identify the main topics or sections in the following text. For each topic, provide: title, start_pos, end_pos. Return as JSON array. Text:\n" + pdfTextResult;
+            ]
+            Text:
+            ${pdfTextResult}`;
         json openAIReq = {
-            "model": "gpt-4-turbo",
+            "model": modelConfig.model,
             "messages": [
                 {"role": "system", "content": "You are an assistant that extracts topics from text."},
                 {"role": "user", "content": prompt}
@@ -553,7 +553,7 @@ service Pixel /pixel on pixelListener {
         };
 
         final http:Client openAIClient = check new ("https://api.openai.com/v1", {
-            auth: {token: openAiToken},
+            auth: {token: modelConfig.openAiToken},
             timeout: 30
         });
 
@@ -571,39 +571,519 @@ service Pixel /pixel on pixelListener {
             if choices.length() == 0 {
                 return error("Choices array is empty");
             }
-
             json firstChoice = choices[0];
             json|error message = firstChoice.message;
+
             if message is json {
-                json|error topics = message.content;
-                json[] parsed;
-                if topics is json[] {
-                    parsed = <json[]>topics;
-                } else if topics is string {
-                    json|error temp = checkpanic jsonutils:fromJSON(topics);
-                    if temp is json[] {
-                        parsed = temp;
+                json|error content = message.content;
+                if content is string {
+                    json|error topics = checkpanic content.fromJsonString();
+                    if topics is json[] {
+                        json[] topicsArray = topics;
+                        foreach var item in topicsArray {
+                            // Process each topic item
+                            json|error titleJson = item.title;
+                            json|error descriptionJson = item.description;
+
+                            string? title = titleJson is string ? titleJson : ();
+                            string? description = descriptionJson is string ? descriptionJson : ();
+                            // Validate each topic item
+                            if title is string && description is string {
+                                // Valid topic item, store it
+                                _ = check dbClient->execute(
+                                    `INSERT INTO topics (pdf_id, title, description) VALUES (${id}, ${title}, ${description})`
+                                );
+
+                            }
+                        }
+                        return string `${topicsArray.length()} topics extracted and stored`;
                     } else {
-                        return error("Topics content is not a valid JSON array");
+                        return error("Extracted topics is not a JSON array");
                     }
                 } else {
-                    return error("Topics content is not a valid JSON array");
+                    return error("Content is not a string");
                 }
-                json[] topicRows = [];
-                foreach var item in parsed {
-                    topicRows.push(item);
-                }
-                return topicRows;
+
             }
 
-            else {
-                return error("Message field is missing or invalid");
-            }
-        } else {
-            return error("Choices field is missing or not an array");
         }
 
     }
 
-}
+    //get all the topics with pdf id
+    resource function get getAllTopics/[int id](http:Request req) returns json[]|UnauthorizedError|error {
+        jwt:Payload|UnauthorizedError authResult = Authorization(req);
+        if (authResult is UnauthorizedError) {
+            return authResult; // UnauthorizedError (includes expiry, invalid, or missing token)
+        }
+        stream<TopicTitle, sql:Error?> topicStream =
+            dbClient->query(`SELECT title,id FROM topics WHERE pdf_id = ${id}`, TopicTitle);
 
+        return from var topic in topicStream
+            select {title: topic.title, id: topic.id};
+    }
+
+    //get 1 topic  make this
+
+    resource function get getTopic/[int topicId](http:Request req) returns json|error|NotFoundError|UnauthorizedError {
+        // Step 0: Validate JWT token
+        jwt:Payload|UnauthorizedError authResult = Authorization(req);
+        if (authResult is UnauthorizedError) {
+            return authResult; // UnauthorizedError (includes expiry, invalid, or missing token)
+        }
+        // int? userId = <int?>authResult["user_id"];
+
+        Topic|sql:Error topicResult = dbClient->queryRow(`SELECT * FROM topics WHERE id = ${topicId}`, Topic);
+        if topicResult is sql:Error {
+            NotFoundError notFoundError = {
+                body: {
+                    message: "Topic not found",
+                    details: "No topic exists with the given ID",
+                    timestamp: time:utcNow()
+                }
+            };
+            return notFoundError;
+        }
+        Topic topic = <Topic>topicResult;
+
+        string topicText = topic.description;
+
+        return {"title": topic.title, "description": topicText};
+    }
+
+    // change this to get quizes per topic only
+    resource function post generateQuizes/[int topicId](http:Request req) returns json|NotFoundError|UnauthorizedError|error? {
+        // Step 0: Validate JWT token
+        jwt:Payload|UnauthorizedError authResult = Authorization(req);
+        if (authResult is UnauthorizedError) {
+            return authResult; // UnauthorizedError (includes expiry, invalid, or missing token)
+        }
+        // int? userId = <int?>authResult["user_id"];
+
+        string|NotFoundError topictext = ExtractedTopic(topicId);
+        if topictext is NotFoundError {
+            return topictext; // NotFoundError if topic does not exist
+        }
+
+        string prompt = string `Generate 5 quiz questions for this topic as a valid JSON array. Follow this exact format:
+        [
+            {
+                "title": "Topic Title",
+                "questions": [
+                    {
+                        "question_text": "Your question here?",
+                        "question_type": "MCQ",
+                        "options": ["Option A", "Option B", "Option C", "Option D"],
+                        "correct_answer": "Option A"
+                    },
+                    {
+                        "question_text": "Another question here?",
+                        "question_type": "Short Answer",
+                        "options": [],
+                        "correct_answer": "Expected answer"
+                    }
+                ]
+            }
+        ]
+
+        IMPORTANT: Return ONLY the JSON array. No explanations, no markdown, no code blocks.
+        
+        Topic:
+        ${topictext}
+        `;
+
+        json openAIReq = {
+            "model": modelConfig.model,
+            "messages": [
+                {"role": "system", "content": "You are an assistant that generates quiz questions from text."},
+                {"role": "user", "content": prompt}
+            ],
+            "max_tokens": 1500,
+            "temperature": 0.3
+        };
+
+        final http:Client openAIClient = check new ("https://api.openai.com/v1", {
+            auth: {token: modelConfig.openAiToken},
+            timeout: 90
+        });
+
+        http:Response aiRes = check openAIClient->post("/chat/completions", openAIReq);
+        if aiRes.statusCode != http:STATUS_OK {
+            return error("OpenAI API request failed with status: " + aiRes.statusCode.toString());
+        }
+
+        json|error aiJson = aiRes.getJsonPayload();
+        if (aiJson is error) {
+            return error("Failed to parse OpenAI API response");
+        }
+
+        json|error choicesResult = aiJson.choices;
+        if choicesResult is error {
+            return error("Failed to extract choices from OpenAI API response");
+        }
+        if !(choicesResult is json[]) {
+            return error("Choices is not a JSON array");
+        }
+        json[] choices = <json[]>choicesResult;
+        if choices.length() == 0 {
+            return error("Choices array is empty");
+        }
+        json firstChoice = choices[0];
+        json|error messageResult = firstChoice.message;
+        if (messageResult is error) {
+            return error("Failed to extract message from first choice");
+        }
+        json|error contentResult = messageResult.content;
+        if (contentResult is error) {
+            return error("Failed to extract content from message");
+        }
+        if !(contentResult is string) {
+            return error("Content is not a string");
+        }
+        string content = <string>contentResult;
+        // Clean the content to extract only valid JSON
+        string cleanedContent = content.trim();
+        if (cleanedContent.startsWith("```json")) {
+            cleanedContent = cleanedContent.substring(7);
+        } else if (cleanedContent.startsWith("```")) {
+            cleanedContent = cleanedContent.substring(3);
+        }
+        if (cleanedContent.endsWith("```")) {
+            cleanedContent = cleanedContent.substring(0, cleanedContent.length() - 3);
+        }
+        cleanedContent = cleanedContent.trim();
+        int firstBracket = cleanedContent.indexOf("[") ?: -1;
+        int lastBracket = cleanedContent.lastIndexOf("]") ?: -1;
+        if (firstBracket == -1 || lastBracket == -1 || firstBracket >= lastBracket) {
+            return error("No valid JSON array found in the response");
+        }
+        string jsonContent = cleanedContent.substring(firstBracket, lastBracket + 1);
+        // Parse the JSON content with proper error handling
+        json|error quizResult = jsonContent.fromJsonString();
+        if (quizResult is error) {
+            io:println("Raw content: " + content);
+            io:println("Cleaned content: " + jsonContent);
+            return error("Failed to parse quiz JSON: " + quizResult.message());
+        }
+        if !(quizResult is json[]) {
+            return error("Parsed content is not a JSON array");
+        }
+        json[] quizArray = <json[]>quizResult;
+        // Insert each quiz into the database
+        foreach json quiz in quizArray {
+            json|error titleResult = quiz.title;
+            if (titleResult is error || !(titleResult is string)) {
+                continue;
+            }
+            string title = <string>titleResult;
+
+            sql:ExecutionResult|sql:Error insertResult = dbClient->execute(
+                `INSERT INTO quizzes (topic_id, title) VALUES (${topicId}, ${title})`
+            );
+            if (insertResult is sql:Error) {
+                continue;
+            }
+            // Get the last inserted quiz id
+            int quizId = check dbClient->queryRow(`SELECT LAST_INSERT_ID()`);
+            // Insert questions for this quiz
+            json|error questionsResult = quiz.questions;
+            if (questionsResult is json[]) {
+                json[] questionsArray = <json[]>questionsResult;
+                foreach json question in questionsArray {
+                    json|error questionTextResult = question.question_text;
+                    json|error questionTypeResult = question.question_type;
+                    json|error optionsResult = question.options;
+                    json|error correctAnswerResult = question.correct_answer;
+                    if (questionTextResult is string && questionTypeResult is string && optionsResult is json[] && correctAnswerResult is string) {
+                        string questionText = <string>questionTextResult;
+                        string questionType = <string>questionTypeResult;
+                        string optionsStr = optionsResult.toJsonString();
+                        string correctAnswer = <string>correctAnswerResult;
+                        sql:ExecutionResult|sql:Error qInsertResult = dbClient->execute(
+                            `INSERT INTO questions (quiz_id, question_text, question_type, options, correct_answer) VALUES (${quizId}, ${questionText}, ${questionType}, ${optionsStr}, ${correctAnswer})`
+                        );
+                        if (qInsertResult is sql:Error) {
+                            io:println("Failed to insert question: " + qInsertResult.message());
+                            continue;
+                        }
+                    }
+                }
+            }
+        }
+
+        return {
+            "message": "Quizzes generated successfully",
+            "quizzes": quizArray
+        };
+
+    }
+
+    //get  quizID for a topic
+    resource function get getQuizId/[int topicId]() returns int|NotFoundError {
+        int|sql:Error quizIdResult = dbClient->queryRow(`SELECT id FROM quizzes WHERE topic_id = ${topicId}`);
+        if quizIdResult is sql:Error {
+            NotFoundError notFoundError = {
+                body: {
+                    message: "Quiz not found",
+                    details: "No quiz exists for the given topic ID",
+                    timestamp: time:utcNow()
+                }
+            };
+            return notFoundError;
+        }
+        return <int>quizIdResult; // Return the quiz ID
+    }
+
+    //for 1 quiz all questions, by using the topicid get the quiz id and from it get all questions related to 1 quiz id(get all questions)
+    resource function get getQuizes/[int quizId]() returns Quiz[]|error {
+        stream<Quiz, sql:Error?> quizStream =
+        dbClient->query(`SELECT * FROM questions WHERE quiz_id=${quizId}`, Quiz);
+
+        Quiz[]|sql:Error quizResult = from var quiz in quizStream
+            select quiz;
+
+        if quizResult is sql:Error {
+            return quizResult;
+        }
+        return quizResult;
+
+    }
+
+    //get 1 question by question id
+    resource function get getQuiz/[int questionId]() returns Quiz|NotFoundError|error {
+        Quiz|sql:Error questionResult = dbClient->queryRow(`SELECT * FROM questions WHERE id = ${questionId}`, Quiz);
+        if questionResult is sql:Error {
+            NotFoundError notFoundError = {
+                body: {
+                    message: "Question not found",
+                    details: "No question exists with the given ID",
+                    timestamp: time:utcNow()
+                }
+            };
+            return notFoundError;
+        }
+        Quiz quiz = <Quiz>questionResult;
+
+        //check ownership
+        return quiz;
+    }
+
+    //per topic
+    resource function post generateFlashCards/[int topicId](http:Request req) returns json|NotFoundError|UnauthorizedError|error? {
+        // Step 0: Validate JWT token
+        jwt:Payload|UnauthorizedError authResult = Authorization(req);
+        if (authResult is UnauthorizedError) {
+            return authResult; // UnauthorizedError (includes expiry, invalid, or missing token)
+        }
+        // int? userId = <int?>authResult["user_id"];
+
+        // Check if topic exists
+        string|NotFoundError extractedTopicResult = ExtractedTopic(topicId);
+        if extractedTopicResult is NotFoundError {
+            return extractedTopicResult;
+        }
+        string topicText = <string>extractedTopicResult;
+
+        // Prompt for flashcard generation
+        string prompt = string `Generate 10 flashcards from the following text. Respond ONLY with a valid JSON array of objects, no explanation. Each object should have:
+        {
+            "term": string,
+            "definition": string
+        }
+        Text:\n${topicText}`;
+
+        json openAIReq = {
+            "model": modelConfig.model,
+            "messages": [
+                {"role": "system", "content": "You are an assistant that generates flashcards (term-definition pairs) from text."},
+                {"role": "user", "content": prompt}
+            ],
+            "max_tokens": 800,
+            "temperature": 0.4
+        };
+
+        final http:Client openAIClient = check new ("https://api.openai.com/v1", {
+            auth: {token: modelConfig.openAiToken},
+            timeout: 90
+        });
+
+        http:Response aiRes = check openAIClient->post("/chat/completions", openAIReq);
+        if aiRes.statusCode != http:STATUS_OK {
+            return error("OpenAI API request failed with status: " + aiRes.statusCode.toString());
+        }
+        // get the content and insert it into the database
+        json|error aiJson = aiRes.getJsonPayload();
+        if aiJson is error {
+            return error("Failed to parse OpenAI response: " + aiJson.message());
+        }
+
+        json|error choicesResult = aiJson.choices;
+        if choicesResult is error {
+            return error("Failed to extract choices from OpenAI API response");
+        }
+        if !(choicesResult is json[]) {
+            return error("Choices is not a JSON array");
+        }
+        json[] choices = <json[]>choicesResult;
+        if choices.length() == 0 {
+            return error("Choices array is empty");
+        }
+        json firstChoice = choices[0];
+        json|error messageResult = firstChoice.message;
+        if (messageResult is error) {
+            return error("Failed to extract message from first choice");
+        }
+        json|error contentResult = messageResult.content;
+        if (contentResult is error) {
+            return error("Failed to extract content from message");
+        }
+        if !(contentResult is string) {
+            return error("Content is not a string");
+        }
+        string content = <string>contentResult;
+
+        // Clean the content to extract only valid JSON
+        string cleanedContent = content.trim();
+        if (cleanedContent.startsWith("```json")) {
+            cleanedContent = cleanedContent.substring(7);
+        } else if (cleanedContent.startsWith("```")) {
+            cleanedContent = cleanedContent.substring(3);
+        }
+        if (cleanedContent.endsWith("```")) {
+            cleanedContent = cleanedContent.substring(0, cleanedContent.length() - 3);
+        }
+        cleanedContent = cleanedContent.trim();
+        int firstBracket = cleanedContent.indexOf("[") ?: -1;
+        int lastBracket = cleanedContent.lastIndexOf("]") ?: -1;
+        if (firstBracket == -1 || lastBracket == -1 || firstBracket >= lastBracket) {
+            return error("No valid JSON array found in the response");
+        }
+        string jsonContent = cleanedContent.substring(firstBracket, lastBracket + 1);
+
+        // Parse the JSON content with proper error handling
+        json|error flashcardsResult = jsonContent.fromJsonString();
+        if (flashcardsResult is error) {
+            io:println("Raw content: " + content);
+            io:println("Cleaned content: " + jsonContent);
+            return error("Failed to parse flashcards JSON: " + flashcardsResult.message());
+        }
+        if !(flashcardsResult is json[]) {
+            return error("Parsed content is not a JSON array");
+        }
+        json[] flashcardsArray = <json[]>flashcardsResult;
+
+        // Insert each flashcard into the database
+        int insertedCount = 0;
+        foreach json flashcard in flashcardsArray {
+            json|error termResult = flashcard.term;
+            json|error definitionResult = flashcard.definition;
+            if (termResult is error || definitionResult is error) {
+                continue;
+            }
+            if (!(termResult is string && definitionResult is string)) {
+                continue;
+            }
+            string term = <string>termResult;
+            string definition = <string>definitionResult;
+            sql:ExecutionResult|sql:Error insertResult = dbClient->execute(
+            `INSERT INTO flashcards (topic_id, term, definition) VALUES (${topicId}, ${term}, ${definition})`
+            );
+            if (insertResult is sql:Error) {
+                continue;
+            }
+            insertedCount += 1;
+        }
+
+        return {
+            "message": string `${insertedCount}  flashcards generated and stored successfully`,
+            "flashcards": flashcardsArray
+        };
+
+    }
+
+    //get all flashcards per topic
+    resource function get getAllFlashcards/[int topicId](http:Request req) returns Flashcard[]|sql:Error|UnauthorizedError|NotFoundError {
+        // Step 0: Validate JWT token
+        jwt:Payload|UnauthorizedError authResult = Authorization(req);
+        if (authResult is UnauthorizedError) {
+            return authResult; // UnauthorizedError (includes expiry, invalid, or missing token)
+        }
+        int? userId = <int?>authResult["user_id"];
+        // does this topic id belong to the user?
+        int|sql:Error pdfIDResult = dbClient->queryRow(`SELECT pdf_id FROM topics WHERE id = ${topicId}`);
+        if pdfIDResult is int {
+            int pdfID = <int>pdfIDResult;
+            int|sql:Error userIDResult = dbClient->queryRow(`SELECT user_id FROM pdf_documents WHERE id = ${pdfID}`);
+            if userIDResult is int {
+                int userID = <int>userIDResult;
+                if (userID == userId) {
+                    stream<Flashcard, sql:Error?> flashcardStream =
+                        dbClient->query(`SELECT * FROM flashcards WHERE topic_id=${topicId}`, Flashcard);
+                    Flashcard[]|sql:Error flashcardResult = from var flashcard in flashcardStream
+                        select flashcard;
+                    if flashcardResult is sql:Error {
+                        return flashcardResult;
+                    }
+                    return flashcardResult;
+                } else {
+                    UnauthorizedError unauthorizedError = {
+                        body: {message: "User is not authorized to access this resource", details: "User ID does not match", timestamp: time:utcNow()}
+                    };
+                    return unauthorizedError;
+                }
+            }
+        }
+        NotFoundError notFoundError = {
+            body: {message: "Flashcard not found", details: "No flashcard exists with the given topic ID", timestamp: time:utcNow()}
+        };
+        return notFoundError;
+
+    }
+
+    //get 1 flashcard
+    resource function get getFlashcard/[int flashcardId](http:Request req) returns Flashcard|NotFoundError|UnauthorizedError {
+        // Step 0: Validate JWT token
+        jwt:Payload|UnauthorizedError authResult = Authorization(req);
+        if (authResult is UnauthorizedError) {
+            return authResult; // UnauthorizedError (includes expiry, invalid, or missing token)
+        }
+        int? userId = <int?>authResult["user_id"];
+        Flashcard|sql:Error flashcardResult = dbClient->queryRow(`SELECT * FROM flashcards WHERE id = ${flashcardId}`, Flashcard);
+        if flashcardResult is sql:Error {
+            NotFoundError notFoundError = {
+                body: {
+                    message: "Flashcard not found",
+                    details: "No flashcard exists with the given ID",
+                    timestamp: time:utcNow()
+                }
+            };
+            return notFoundError;
+        }
+        Flashcard flashcard = <Flashcard>flashcardResult;
+        // Check topic ownership
+        int|sql:Error pdfIDResult = dbClient->queryRow(`SELECT pdf_id FROM topics WHERE id = ${flashcard.topic_id}`);
+        if pdfIDResult is int {
+            int pdfID = <int>pdfIDResult;
+            int|sql:Error userIDResult = dbClient->queryRow(`SELECT user_id FROM pdf_documents WHERE id = ${pdfID}`);
+            if userIDResult is int {
+                int userID = <int>userIDResult;
+                if (userID == userId) {
+                    return flashcard;
+                } else {
+                    UnauthorizedError unauthorizedError = {
+                        body: {message: "User is not authorized to access this resource", details: "User ID does not match", timestamp: time:utcNow()}
+                    };
+                    return unauthorizedError;
+                }
+            }
+        }
+        NotFoundError notFoundError = {
+            body: {message: "Flashcard not found", details: "No flashcard exists with the given topic ID", timestamp: time:utcNow()}
+        };
+        return notFoundError;
+
+    }
+    
+    
+
+}

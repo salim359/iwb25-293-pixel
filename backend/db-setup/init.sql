@@ -29,8 +29,7 @@ CREATE TABLE topics (
     id INT AUTO_INCREMENT PRIMARY KEY,
     pdf_id INT,
     title VARCHAR(255) NOT NULL,
-    start_pos INT,
-    end_pos INT,
+    description TEXT NOT NULL,
     FOREIGN KEY (pdf_id) REFERENCES pdf_documents(id)
 );
 
@@ -38,7 +37,7 @@ CREATE TABLE quizzes (
     id INT AUTO_INCREMENT PRIMARY KEY,
     topic_id INT,
     title VARCHAR(255) NOT NULL,
-    created_at DATETIME NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (topic_id) REFERENCES topics(id)
 );
 
