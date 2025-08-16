@@ -56,6 +56,9 @@ service /pixel on pixelListener {
     resource function get getQuiz/[int questionId]() returns Quiz|NotFoundError|error {
         return getquiz(questionId);
     }
+    resource function post generateFlashcards/[int topicId](http:Request req) returns json|NotFoundError|UnauthorizedError|error? {
+        return  generateFlashCards(topicId, req);
+    }
     
     resource function get getAllFlashcards/[int topicId](http:Request req) returns Flashcard[]|sql:Error|UnauthorizedError|NotFoundError {
         return getallFlashcards(topicId, req);
@@ -65,6 +68,7 @@ service /pixel on pixelListener {
 
         return getflashcard(flashcardId, req);
     }
+    
 
     resource function get userProgress(http:Request req) returns json|NotFoundError|UnauthorizedError|error {
         return getuserprogress(req);
