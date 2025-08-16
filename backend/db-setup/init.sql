@@ -10,7 +10,7 @@ CREATE TABLE pdf_documents (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
     file_name VARCHAR(255) NOT NULL,
-    upload_date DATETIME NOT NULL,
+    upload_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     extracted_text TEXT,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
@@ -20,7 +20,7 @@ CREATE TABLE pdf_summaries (
     id INT AUTO_INCREMENT PRIMARY KEY,
     pdf_id INT NOT NULL,
     summary TEXT NOT NULL,
-    generated_at DATETIME NOT NULL,
+    generated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (pdf_id) REFERENCES pdf_documents(id)
 );
 
@@ -63,25 +63,24 @@ CREATE TABLE exams (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
     title VARCHAR(255) NOT NULL,
-    created_at DATETIME NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
 CREATE TABLE exam_question (
     id INT AUTO_INCREMENT PRIMARY KEY,
     exam_id INT,
-    question_id INT,
     sequence INT,
-    FOREIGN KEY (exam_id) REFERENCES exams(id),
-    FOREIGN KEY (question_id) REFERENCES questions(id)
+    question_text TEXT NOT NULL,
+    answer_text TEXT NOT NULL,
+    FOREIGN KEY (exam_id) REFERENCES exams(id)
 );
-
 CREATE TABLE user_progress (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
     quiz_id INT,
     score INT,
-    completed_at DATETIME,
+    completed_at DATETIME  DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (quiz_id) REFERENCES quizzes(id)
 );

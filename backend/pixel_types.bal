@@ -65,7 +65,7 @@ public type Quiz record {|
     string question_type;
     string options;
     string correct_answer;
-    string created_at;
+    string created_at = time:utcNow().toString();
 |};
 
 public type Flashcard record {|
@@ -108,4 +108,21 @@ public type UnauthorizedError record {|
 public type NotFoundError record {|
     *http:NotFound;
     ErrorDetails body;
+|};
+
+public type UserProgress record {|
+    int id;
+    int user_id;
+    int quiz_id;
+    int score;
+    string completed_at = time:utcNow().toString();
+|};
+public type AnswerPayload record { int questionId; string answer; };
+
+public type Exam record {|
+    int id;
+    int exam_id;
+    string question_text;
+    string answer_text;
+    int sequence;
 |};

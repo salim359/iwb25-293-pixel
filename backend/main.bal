@@ -65,6 +65,26 @@ service /pixel on pixelListener {
 
         return getflashcard(flashcardId, req);
     }
+
+    resource function get userProgress(http:Request req) returns json|NotFoundError|UnauthorizedError|error {
+        return getuserprogress(req);
+    }
+
+    resource function get userProgressPerQuizSet/[int quizId](http:Request req) returns json|NotFoundError|UnauthorizedError|error {
+        return getuserprogressperquizset(quizId, req);
+    }
+
+    resource function post addUserProgress/[int quizId](http:Request req) returns json|UnauthorizedError|NotFoundError|error{
+        return adduserprogress(quizId,req);
+
+    }
     
-    
+    resource function post generateExamQuestions/[int pdfId](http:Request req) returns string|NotFoundError|UnauthorizedError|error? {
+        return generateExam(pdfId,req);
+    }
+
+    resource function get Exam/[int examId](http:Request req) returns Exam[]|NotFoundError|UnauthorizedError|error {
+        return getExam(examId, req);
+    }
+
 }

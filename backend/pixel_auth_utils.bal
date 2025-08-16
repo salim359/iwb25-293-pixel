@@ -78,3 +78,19 @@ function ExtractedTopic(int topicId) returns NotFoundError|string {
     return description;
 
 }
+
+function IscorrectAnswer(int questionId, string userAnswer) returns int {
+    Quiz|sql:Error quizResult = dbClient->queryRow(`SELECT * FROM questions WHERE id = ${questionId}`);
+    if quizResult is Quiz {
+        string correctAnswer = quizResult.correct_answer;
+        // Check if the user's answer matches the correct answer
+        if correctAnswer == userAnswer {
+            return 10;
+        } else {
+            return 0;
+        }
+    } else {
+        // If there was an error fetching the quiz, return 0 or handle as needed
+        return 0;
+    }
+}
