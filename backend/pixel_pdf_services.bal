@@ -4,7 +4,7 @@ import ballerina/sql;
 import ballerina/time;
 import ballerina/mime;
 
-    public function  pdfUpload(http:Request req) returns error?|int|UnauthorizedError {       // Step 0: Validate JWT token
+    public function  pdfUpload(http:Request req) returns error?|json|UnauthorizedError {       // Step 0: Validate JWT token
         jwt:Payload|UnauthorizedError authResult = Authorization(req);
         if (authResult is UnauthorizedError) {
             return authResult; // UnauthorizedError (includes expiry, invalid, or missing token)
@@ -86,7 +86,7 @@ import ballerina/mime;
 
         // Fetch the last inserted ID using SQL
         int lastInsertedId = check dbClient->queryRow(`SELECT LAST_INSERT_ID()`);
-        return lastInsertedId;
+        return {id: lastInsertedId};
     }
 
     public function  generateSummary(int id,http:Request req) returns json|NotFoundError|UnauthorizedError|error? {

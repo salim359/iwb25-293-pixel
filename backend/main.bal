@@ -20,7 +20,7 @@ service /pixel on pixelListener {
     resource function post login(LoginRequest loginRequest) returns LoginResponse|NotFoundError|UnauthorizedError|error {
         return authenticateUser(loginRequest);
     }
-    resource function post pdfUpload(http:Request req) returns error?|int|UnauthorizedError {
+    resource function post pdfUpload(http:Request req) returns error?|json|UnauthorizedError {
         return pdfUpload(req);
     }
     resource function post generatePdfSummary/[int id](http:Request req) returns json|NotFoundError|UnauthorizedError|error? {
@@ -83,8 +83,8 @@ service /pixel on pixelListener {
         return generateExam(pdfId,req);
     }
 
-    resource function get Exam/[int examId](http:Request req) returns Exam[]|NotFoundError|UnauthorizedError|error {
-        return getExam(examId, req);
-    }
+    // resource function get Exam/[int examId](http:Request req) returns Exam[]|NotFoundError|UnauthorizedError|error {
+    //     return getExam(examId, req);
+    // }
 
 }

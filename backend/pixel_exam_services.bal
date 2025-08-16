@@ -1,7 +1,7 @@
 import ballerina/http;
-import ballerina/io;
+// import ballerina/io;
 import ballerina/jwt;
-import ballerina/sql;
+// import ballerina/sql;
 
 public function generateExam(int pdfId, http:Request req) returns string|NotFoundError|UnauthorizedError|error {
 
@@ -103,29 +103,29 @@ public function generateExam(int pdfId, http:Request req) returns string|NotFoun
 
 }
 
-public function getExam(int examId, http:Request req) returns Exam[]|NotFoundError|UnauthorizedError|error {
-    jwt:Payload|UnauthorizedError authResult = Authorization(req);
-    if (authResult is UnauthorizedError) {
-        return authResult;
-    }
-    int? userId = <int?>authResult["user_id"];
+// public function getExam(int examId, http:Request req) returns Exam[]|NotFoundError|UnauthorizedError|error {
+//     jwt:Payload|UnauthorizedError authResult = Authorization(req);
+//     if (authResult is UnauthorizedError) {
+//         return authResult;
+//     }
+//     int? userId = <int?>authResult["user_id"];
     
-    // Validate user access to the exam
-    anydata|sql:Error examIdCheck = dbClient->queryRow(`SELECT id FROM exams WHERE id = ${examId} AND user_id = ${userId}`);
-    if examIdCheck is sql:Error {
-        if examIdCheck is sql:NoRowsError {
-            return error("Exam not found or you do not have access to it");
-        }
-        return examIdCheck;
-    }
+//     // Validate user access to the exam
+//     anydata|sql:Error examIdCheck = dbClient->queryRow(`SELECT id FROM exams WHERE id = ${examId} AND user_id = ${userId}`);
+//     if examIdCheck is sql:Error {
+//         if examIdCheck is sql:NoRowsError {
+//             return error("Exam not found or you do not have access to it");
+//         }
+//         return examIdCheck;
+//     }
     
-    // Query exam questions
-    stream<Exam, sql:Error> examStream = check dbClient->query(`SELECT * FROM exam_question WHERE exam_id = ${examId} ORDER BY sequence ASC`, Exam);
-    Exam[]|error exam = from var examq in examStream
-            select examq;
-    if exam is error {
-        return exam;
-    }
-    return exam;
-}
+//     // Query exam questions
+//     stream<Exam, sql:Error> examStream = check dbClient->query(`SELECT * FROM exam_question WHERE exam_id = ${examId} ORDER BY sequence ASC`, Exam);
+//     Exam[]|error exam = from var examq in examStream
+//             select examq;
+//     if exam is error {
+//         return exam;
+//     }
+//     return exam;
+// }
 
