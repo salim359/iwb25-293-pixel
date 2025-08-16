@@ -172,7 +172,7 @@ public function generatequizes(int topicId,http:Request req) returns json|NotFou
     }
 
     //get  quizID for a topic
-    public function getquizId(int topicId) returns int|NotFoundError {
+    public function getquizId(int topicId) returns json|NotFoundError {
         int|sql:Error quizIdResult = dbClient->queryRow(`SELECT id FROM quizzes WHERE topic_id = ${topicId}`);
         if quizIdResult is sql:Error {
             NotFoundError notFoundError = {
@@ -184,7 +184,9 @@ public function generatequizes(int topicId,http:Request req) returns json|NotFou
             };
             return notFoundError;
         }
-        return <int>quizIdResult; // Return the quiz ID
+        return {
+            "quizId": <int>quizIdResult
+        };
     }
 
     //for 1 quiz all questions, by using the topicid get the quiz id and from it get all questions related to 1 quiz id(get all questions)
@@ -217,7 +219,6 @@ public function generatequizes(int topicId,http:Request req) returns json|NotFou
         }
         Quiz quiz = <Quiz>questionResult;
 
-        //check ownership
         return quiz;
     }
 

@@ -79,7 +79,7 @@ import ballerina/time;
 
                             }
                         }
-                        return string `${topicsArray.length()} topics extracted and stored`;
+                        return { message: "Topics generated successfully", topics: topicsArray };
                     } else {
                         return error("Extracted topics is not a JSON array");
                     }

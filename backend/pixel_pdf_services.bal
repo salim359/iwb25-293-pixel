@@ -161,7 +161,7 @@ import ballerina/mime;
                         _ = check dbClient->execute(
                             `UPDATE pdf_summaries SET summary = ${summary}, generated_at = ${time:utcNow()} WHERE pdf_id = ${id}`
                         );
-                        return "Summary was updated successfully";
+                        return  {"message": "Summary was updated successfully"};
                     }
                 } else {
                     return error("Summary content is not a string");

@@ -3,7 +3,7 @@ import ballerina/http;
 import ballerina/jwt;
 // import ballerina/sql;
 
-public function generateExam(int pdfId, http:Request req) returns string|NotFoundError|UnauthorizedError|error {
+public function generateExam(int pdfId, http:Request req) returns json|NotFoundError|UnauthorizedError|error {
 
     jwt:Payload|UnauthorizedError authResult = Authorization(req);
     if (authResult is UnauthorizedError) {
@@ -88,7 +88,7 @@ public function generateExam(int pdfId, http:Request req) returns string|NotFoun
                             );
                         }
                     }
-                    return string `${examArray.length()} exams extracted and stored`;
+                    return <json>{"message": examArray.length().toString() + " exams extracted and stored"};
                 } else {
                     return error("Extracted exams is not a JSON array");
                 }
