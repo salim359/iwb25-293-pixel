@@ -20,74 +20,88 @@ service /pixel on pixelListener {
     resource function post login(LoginRequest loginRequest) returns LoginResponse|NotFoundError|UnauthorizedError|error {
         return authenticateUser(loginRequest);
     }
-    resource function post pdfUpload(http:Request req) returns error?|json|UnauthorizedError {
+    
+    //upload pdfs
+    resource function post pdfs(http:Request req) returns json|UnauthorizedError|error? {
         return pdfUpload(req);
     }
-    resource function post generatePdfSummary/[int id](http:Request req) returns json|NotFoundError|UnauthorizedError|error? {
+      // Generate a summary for a PDF
+    resource function post pdfs/[int id]/summaries(http:Request req) returns json|NotFoundError|UnauthorizedError|error? {
         return generateSummary(id, req);
     }
-    
-    resource function get getPdfSummary/[int id](http:Request req) returns json|NotFoundError|UnauthorizedError|error? {
-
+     // Retrieve a summary for a PDF
+    resource function get pdfs/[int id]/summaries(http:Request req) returns json|NotFoundError|UnauthorizedError|error? {
         return getSummary(id, req);
     }
-    resource function post generateTopics/[int id](http:Request req) returns json|NotFoundError|UnauthorizedError|error? {
+    // Generate topics for a PDF
+    resource function post pdfs/[int id]/topics(http:Request req) returns json|NotFoundError|UnauthorizedError|error? {
         return generatetopics(id, req);
     }
     
-    resource function get getAllTopics/[int id](http:Request req) returns json[]|UnauthorizedError|error {
+    // Retrieve all topics for a PDF
+    resource function get pdfs/[int id]/topics(http:Request req) returns json[]|UnauthorizedError|error {
         return getallTopics(id, req);
     }
-    resource function get getTopic/[int topicId](http:Request req) returns json|error|NotFoundError|UnauthorizedError {
-
+     // Retrieve a specific topic by ID
+    resource function get topics/[int topicId](http:Request req) returns json|NotFoundError|UnauthorizedError|error {
         return gettopic(topicId, req);
     }
     
-    resource function post generateQuizes/[int topicId](http:Request req) returns json|NotFoundError|UnauthorizedError|error? {
+    // Generate quizzes for a topic
+    resource function post topics/[int topicId]/quizzes(http:Request req) returns json|NotFoundError|UnauthorizedError|error? {
         return generatequizes(topicId, req);
     }
-    resource function get getQuizId/[int topicId]() returns json|NotFoundError {
-
+    // Retrieve quiz IDs for a topic
+    resource function get topics/[int topicId]/quizzes() returns json|NotFoundError {
         return getquizId(topicId);
     }
-    resource function get getQuizes/[int quizId]() returns Quiz[]|error {
-             return getquizes(quizId);
-     }
-    resource function get getQuiz/[int questionId]() returns Quiz|NotFoundError|error {
-        return getquiz(questionId);
-    }
-    resource function post generateFlashcards/[int topicId](http:Request req) returns json|NotFoundError|UnauthorizedError|error? {
-        return  generateFlashCards(topicId, req);
+
+    // Retrieve all quizzes for a quiz set
+    resource function get quizzes/[int quizId]() returns Quiz[]|error {
+        return getquizes(quizId);
     }
     
-    resource function get getAllFlashcards/[int topicId](http:Request req) returns Flashcard[]|sql:Error|UnauthorizedError|NotFoundError {
+    // Retrieve a specific quiz question
+    resource function get questions/[int questionId]() returns Quiz|NotFoundError|error {
+        return getquiz(questionId);
+    }
+    // Generate flashcards for a topic
+    resource function post topics/[int topicId]/flashcards(http:Request req) returns json|NotFoundError|UnauthorizedError|error? {
+        return generateFlashCards(topicId, req);
+    }
+    
+     // Retrieve all flashcards for a topic
+    resource function get topics/[int topicId]/flashcards(http:Request req) returns Flashcard[]|sql:Error|UnauthorizedError|NotFoundError {
         return getallFlashcards(topicId, req);
     }
     
-    resource function get getFlashcard/[int flashcardId](http:Request req) returns Flashcard|NotFoundError|UnauthorizedError {
-
+    // Retrieve a specific flashcard
+    resource function get flashcards/[int flashcardId](http:Request req) returns Flashcard|NotFoundError|UnauthorizedError {
         return getflashcard(flashcardId, req);
     }
-    
 
-    resource function get userProgress(http:Request req) returns json|NotFoundError|UnauthorizedError|error {
+
+     // Retrieve overall user progress
+    resource function get users/progress(http:Request req) returns json|NotFoundError|UnauthorizedError|error {
         return getuserprogress(req);
     }
 
-    resource function get userProgressPerQuizSet/[int quizId](http:Request req) returns json|NotFoundError|UnauthorizedError|error {
+      // Retrieve user progress for a specific quiz set
+    resource function get quizzes/[int quizId]/progress(http:Request req) returns json|NotFoundError|UnauthorizedError|error {
         return getuserprogressperquizset(quizId, req);
     }
-
-    resource function post addUserProgress/[int quizId](http:Request req) returns json|UnauthorizedError|NotFoundError|error{
-        return adduserprogress(quizId,req);
-
-    }
-    
-    resource function post generateExamQuestions/[int pdfId](http:Request req) returns json|NotFoundError|UnauthorizedError|error? {
-        return generateExam(pdfId,req);
+    // Add user progress for a quiz set
+    resource function post quizzes/[int quizId]/progress(http:Request req) returns json|UnauthorizedError|NotFoundError|error {
+        return adduserprogress(quizId, req);
     }
 
-    // resource function get Exam/[int examId](http:Request req) returns Exam[]|NotFoundError|UnauthorizedError|error {
+      // Generate exam questions for a PDF
+    resource function post pdfs/[int pdfId]/examquestions(http:Request req) returns json|NotFoundError|UnauthorizedError|error? {
+        return generateExam(pdfId, req);
+    }
+
+    // Retrieve exam questions (uncomment if needed)
+    // resource function get exams/[int examId](http:Request req) returns Exam[]|NotFoundError|UnauthorizedError|error {
     //     return getExam(examId, req);
     // }
 
