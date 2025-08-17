@@ -116,9 +116,46 @@ service /pixel on pixelListener {
     }
 
     // Retrieve exam questions
-    resource function get pdfs/[int pdfId]/examquestions(http:Request req) returns Exam[]|NotFoundError|UnauthorizedError|error {
+    resource function get pdfs/[int pdfId]/examquestions(http:Request req) returns Exam[]|UnauthorizedError|error {
         return getExam(pdfId, req);
     }
+// <<<<<<< HEAD
 
+// =======
+    
+//     // Evaluate answer using AI
+//     resource function post evaluateanswer(http:Request req) returns json|UnauthorizedError|error {
+//         // Authenticate user
+//         jwt:Payload|UnauthorizedError authResult = Authorization(req);
+//         if authResult is UnauthorizedError {
+//             return authResult;
+//         }
+        
+//         // Parse request body
+//         json|error requestBody = req.getJsonPayload();
+//         if requestBody is error {
+//             return error("Failed to parse request body: " + requestBody.message());
+//         }
+        
+//         json|error questionJson = requestBody.question;
+//         json|error answerJson = requestBody.answer;
+//         json|error userAnswerJson = requestBody.userAnswer;
+        
+//         if questionJson is error || answerJson is error || userAnswerJson is error {
+//             return error("Invalid request body format: missing required fields");
+//         }
+        
+//         if questionJson is string && answerJson is string && userAnswerJson is string {
+//             json|error evaluationResult = evaluateAnswer(questionJson, answerJson, userAnswerJson);
+//             if evaluationResult is error {
+//                 return error("Failed to evaluate answer: " + evaluationResult.message());
+//             }
+//             return evaluationResult;
+//         }
+        
+//         return error("Invalid request body format");
+//     }
+    
+// >>>>>>> origin/main
 
 }
