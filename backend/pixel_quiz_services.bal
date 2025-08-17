@@ -187,9 +187,10 @@ public function generatequizes(int topicId, http:Request req) returns json|NotFo
 }
 
 //get  quizID for a topic
-public function getquizId(int topicId) returns int|NotFoundError {
-    int|sql:Error quizIdResult = dbClient->queryRow(`SELECT id FROM quizzes WHERE topic_id = ${topicId}`);
-    if quizIdResult is sql:Error {
+public function getquizIds(int topicId) returns int[]|NotFoundError {
+    stream<int, sql:Error?> quizIdStream = dbClient->query(`SELECT id FROM quizzes WHERE topic_id = ${topicId}`);
+    int[]|sql:Error quizIdsResult = from var id in quizIdStream select id;
+    if quizIdsResult is sql:Error {
         NotFoundError notFoundError = {
             body: {
                 message: "Quiz not found",
@@ -199,7 +200,7 @@ public function getquizId(int topicId) returns int|NotFoundError {
         };
         return notFoundError;
     }
-    return quizIdResult;
+    return quizIdsResult;
 }
 
 //for 1 quiz all questions, by using the topicid get the quiz id and from it get all questions related to 1 quiz id(get all questions)
@@ -384,25 +385,21 @@ public function adduserprogress(http:Request req) returns json|UnauthorizedError
     };
 }
 
-public function getuserprogressperquizset(int quizId, http:Request req) returns json|NotFoundError|UnauthorizedError|error {
+public function getuserprogressperquizset(int topicId, http:Request req) returns json|NotFoundError|UnauthorizedError|error {
     jwt:Payload|UnauthorizedError authResult = Authorization(req);
     if (authResult is UnauthorizedError) {
         return authResult; // UnauthorizedError (includes expiry, invalid, or missing token)
     }
     int? userId = <int?>authResult["user_id"];
+    int|NotFoundError quizId = getquizId(topicId);
+    io:println(quizId);
+    if quizId is NotFoundError {
+        return quizId; // NotFoundError if quiz does not exist
+    }
+    
     UserProgress|error userProgress = dbClient->queryRow(`SELECT * FROM user_progress WHERE user_id = ${userId} AND quiz_id = ${quizId}`, UserProgress);
     if userProgress is error {
-        if userProgress is sql:NoRowsError {
-            NotFoundError userNotFound = {
-                body: {
-                    message: "User progress not found",
-                    details: "No progress exists for the given user ID",
-                    timestamp: time:utcNow()
-                }
-            };
-            return userNotFound;
-        }
-        return userProgress;
+        return { score :0 };
     }
     return {score: userProgress.score};
 }

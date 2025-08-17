@@ -3,6 +3,7 @@ import ballerina/jwt;
 import ballerina/mime;
 import ballerina/sql;
 import ballerina/time;
+
 // import ballerina/io;
 
 public function pdfUpload(http:Request req) returns error?|json|UnauthorizedError { // Step 0: Validate JWT token
@@ -24,41 +25,63 @@ public function pdfUpload(http:Request req) returns error?|json|UnauthorizedErro
             }
         }
     }
-    
+
     final http:Client openAIClient = check new ("https://api.openai.com/v1", {
         auth: {
             token: modelConfig.openAiToken
         },
         timeout: 30 // Added timeout for robustness
     });
-     // Read the PDF file
+    // Read the PDF file
     byte[] fileData = check filePart.getByteArray();
-    
-      // Prepare OpenAI request
-    string prompt = "extract text the given pdf:\n" ;
+
+    // Prepare JSON payload referencing the file part
     json openAIReq = {
-        "model": modelConfig.model,
+        "model": "gpt-4o",
         "messages": [
-            {"role": "system", "content": "You are a helpful assistant that extract text concisely from a given pdf."},
-            {"role": "user", "content": prompt}
-        ],
-        "max_tokens": 300,
-        "temperature": 0.7
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "file",
+                        "file": "file",
+                        "filename": fileName
+                    },
+                    {
+                        "type": "text",
+                        "text": "Extract all text from this PDF."
+                    }
+                ]
+            }
+        ]
     };
-    // Send request to OpenAI
-    http:Response aiRes = check openAIClient->post("/chat/completions", openAIReq);
+
+    // Create multipart/form-data request
+    mime:Entity jsonPart = new;
+    jsonPart.setJson(openAIReq);
+    jsonPart.addHeader("Content-Disposition", string `form-data; name="payload_json"`);
+
+    mime:Entity pdfPart = new;
+    pdfPart.setByteArray(fileData, mime:APPLICATION_OCTET_STREAM);
+    pdfPart.addHeader("Content-Disposition", string `form-data; name="file"; filename="${fileName}"`);
+
+    mime:Entity[] parts = [jsonPart, pdfPart];
+    mime:Entity multipartEntity = new;
+    multipartEntity.setBodyParts(parts);
+
+    http:Request openAIRequest = new;
+    openAIRequest.setEntity(multipartEntity);
+
+    http:Response aiRes = check openAIClient->post("/chat/completions", openAIRequest);
     if aiRes.statusCode != http:STATUS_OK {
         return error("OpenAI API request failed with status: " + aiRes.statusCode.toString());
     }
-    
+
     json|error aiJson = aiRes.getJsonPayload();
     if aiJson is error {
         return error("Failed to parse OpenAI response: " + aiJson.message());
     }
     return aiJson;
-    
-    
-   
 
     // _ = check dbClient->execute(`INSERT INTO pdf_documents (user_id, file_name, upload_date, extracted_text) VALUES (${userId}, ${fileName}, ${time:utcNow()}, ${extractedText})`);
 
@@ -192,10 +215,10 @@ public function getSummary(int id, http:Request req) returns json|NotFoundError|
     }
     int? userId = <int?>authResult["user_id"];
 
-    boolean authorizationPdfAccess = AuthorizedPdfAccess(id,userId);
+    boolean authorizationPdfAccess = AuthorizedPdfAccess(id, userId);
     if (authorizationPdfAccess is false) {
         UnauthorizedError unauthorizedError = {
-            body: {message: "Unauthorized access",details: "You do not have permission to access this PDF document", timestamp: time:utcNow()}
+            body: {message: "Unauthorized access", details: "You do not have permission to access this PDF document", timestamp: time:utcNow()}
         };
         return unauthorizedError;
     }
