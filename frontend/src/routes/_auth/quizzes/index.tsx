@@ -1,11 +1,11 @@
-import { createFileRoute, useSearch } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import z from "zod";
 
 const quizSearchSchema = z.object({
   pdf_id: z.number().optional(),
 });
 
-export const Route = createFileRoute("/_auth/quizes/")({
+export const Route = createFileRoute("/_auth/quizzes/")({
   component: RouteComponent,
   validateSearch: quizSearchSchema,
 });

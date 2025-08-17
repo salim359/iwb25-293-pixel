@@ -42,6 +42,8 @@ export const initialAuthContext: AuthContextType = {
   isAuthenticated: () => false,
 };
 
+const permissions = ["pdfs:*", "quizzes:*"];
+
 export const AuthContext = createContext<AuthContextType>(initialAuthContext);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -56,7 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       id: decoded.user_id,
       name: "",
       email: decoded.email,
-      permissions: ["pdfs:*"],
+      permissions,
     });
   }
 
@@ -88,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           id: userParsed.user_id,
           name: "",
           email: userParsed.email,
-          permissions: ["pdfs:*"],
+          permissions,
         });
 
         console.log("user from local storage", userParsed);
