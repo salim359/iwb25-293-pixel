@@ -71,7 +71,7 @@ service /pixel on pixelListener {
 
 
     // Retrieve all quizzes for a quiz set
-    resource function get topics/[int topicId]/quizzes(http:Request req) returns Quiz[]|UnauthorizedError|NotFoundError|error {
+    resource function get topics/[int topicId]/quizzes(http:Request req) returns json[]|UnauthorizedError|NotFoundError|error {
         return getquizes(topicId, req);
     }
     

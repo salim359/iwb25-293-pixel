@@ -3,6 +3,7 @@ import ballerina/jwt;
 import ballerina/mime;
 import ballerina/sql;
 import ballerina/time;
+// import ballerina/io;
 
 public function pdfUpload(http:Request req) returns error?|json|UnauthorizedError { // Step 0: Validate JWT token
     jwt:Payload|UnauthorizedError authResult = Authorization(req);
@@ -23,70 +24,47 @@ public function pdfUpload(http:Request req) returns error?|json|UnauthorizedErro
             }
         }
     }
-
-    // 1. Get presigned URL from PDF.co
-    http:Client pdfCoClient = check new ("https://api.pdf.co/v1");
-    map<string|string[]> requestHeaders = {"x-api-key": pdf_extractor_api_key};
-
-    string presignPath = string `file/upload/get-presigned-url?name=${fileName}&contenttype=application/octet-stream`;
-    http:Response presignRes = check pdfCoClient->get("/" + presignPath, requestHeaders);
-    json presignJson = check presignRes.getJsonPayload();
-
-    map<anydata> presignMap = <map<anydata>>presignJson;
-    if presignMap.hasKey("error") && presignMap["error"] is boolean && presignMap["error"] == true {
-        return error(presignMap["message"].toString());
-    }
-
-    string presignedUrl = presignMap["presignedUrl"].toString();
-
-    string uploadedFileUrl = presignMap["url"].toString();
-
-    // 2. Upload file to presigned URL
-    byte[] fileBytes = check filePart.getByteArray();
-    http:Client uploadClient = check new (presignedUrl, {
-        httpVersion: http:HTTP_1_1,
-        http1Settings: {
-            chunking: http:CHUNKING_NEVER
-        }
+    
+    final http:Client openAIClient = check new ("https://api.openai.com/v1", {
+        auth: {
+            token: modelConfig.openAiToken
+        },
+        timeout: 30 // Added timeout for robustness
     });
-    http:Request uploadRequest = new;
-    uploadRequest.setHeader("content-type", "application/octet-stream");
-    uploadRequest.setHeader("content-length", fileBytes.length().toString());
-    uploadRequest.setBinaryPayload(fileBytes);
-    http:Response uploadRes = check uploadClient->put("", uploadRequest);
-    if uploadRes.statusCode != 200 {
-        return error("Upload failed with status: " + uploadRes.statusCode.toString());
-    }
-
-    // 3. Convert uploaded PDF to text
-    json convertReq = {
-        url: uploadedFileUrl,
-        pages: "" // All pages
+     // Read the PDF file
+    byte[] fileData = check filePart.getByteArray();
+    
+      // Prepare OpenAI request
+    string prompt = "extract text the given pdf:\n" ;
+    json openAIReq = {
+        "model": modelConfig.model,
+        "messages": [
+            {"role": "system", "content": "You are a helpful assistant that extract text concisely from a given pdf."},
+            {"role": "user", "content": prompt}
+        ],
+        "max_tokens": 300,
+        "temperature": 0.7
     };
-
-    http:Response convertRes = check pdfCoClient->post("/pdf/convert/to/text", convertReq, requestHeaders);
-    json convertJson = check convertRes.getJsonPayload();
-    string extractedText = "";
-    map<anydata> convertMap = <map<anydata>>convertJson;
-    if convertMap.hasKey("error") && convertMap["error"] is boolean && convertMap["error"] == false {
-        if convertMap.hasKey("url") && convertMap["url"] is string {
-            string textFileUrl = <string>convertMap["url"];
-            http:Client textClient = check new (textFileUrl);
-            http:Response textRes = check textClient->get("");
-            extractedText = check textRes.getTextPayload();
-        } else {
-            return error("PDF.co response missing 'url' field or not a string.");
-        }
-    } else {
-        string errMsg = convertMap.hasKey("message") ? convertMap["message"].toString() : "Unknown error from PDF.co";
-        return error(errMsg);
+    // Send request to OpenAI
+    http:Response aiRes = check openAIClient->post("/chat/completions", openAIReq);
+    if aiRes.statusCode != http:STATUS_OK {
+        return error("OpenAI API request failed with status: " + aiRes.statusCode.toString());
     }
+    
+    json|error aiJson = aiRes.getJsonPayload();
+    if aiJson is error {
+        return error("Failed to parse OpenAI response: " + aiJson.message());
+    }
+    return aiJson;
+    
+    
+   
 
-    _ = check dbClient->execute(`INSERT INTO pdf_documents (user_id, file_name, upload_date, extracted_text) VALUES (${userId}, ${fileName}, ${time:utcNow()}, ${extractedText})`);
+    // _ = check dbClient->execute(`INSERT INTO pdf_documents (user_id, file_name, upload_date, extracted_text) VALUES (${userId}, ${fileName}, ${time:utcNow()}, ${extractedText})`);
 
-    // Fetch the last inserted ID using SQL
-    int lastInsertedId = check dbClient->queryRow(`SELECT LAST_INSERT_ID()`);
-    return {id: lastInsertedId};
+    // // Fetch the last inserted ID using SQL
+    // int lastInsertedId = check dbClient->queryRow(`SELECT LAST_INSERT_ID()`);
+    // return {id: lastInsertedId};
 }
 
 public function getAllPdfs(http:Request req) returns json|UnauthorizedError|error {
