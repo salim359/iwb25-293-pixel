@@ -1,144 +1,44 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState, useRef, useContext } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import apiClient from "@/lib/apiClient";
-import {
-  FileText,
-  BookOpen,
-  Brain,
-  PenTool,
-  Eye,
-  Download,
-  Clock,
-  ChevronRight,
-  Sparkles,
-  LogOut,
-} from "lucide-react";
-import { AuthContext } from "@/context/AuthContext";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { FileText, BookOpen, Brain, PenTool } from "lucide-react";
 import UploadPdf from "@/components/pdfs/UploadPdf";
+import apiClient from "@/lib/apiClient";
+import { useQueries, useQuery } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/_auth/pdfs/")({
   component: RouteComponent,
 });
 
-interface PDF {
-  id: number;
-  filename: string;
-  uploadDate: string;
-  status: "processing" | "ready" | "error";
-  summary?: string;
-  topics?: number;
-  quizzes?: number;
-  flashcards?: number;
-}
-
-interface Stats {
-  totalPDFs: number;
-  totalTopics: number;
-  totalQuizzes: number;
-  completionRate: number;
-}
-
 function RouteComponent() {
-  const [pdfs, setPdfs] = useState<PDF[]>([
-    {
-      id: 1,
-      filename: "Machine Learning Fundamentals.pdf",
-      uploadDate: "2025-08-15",
-      status: "ready",
-      topics: 8,
-      quizzes: 12,
-      flashcards: 45,
+  const pdfQuery = useQuery({
+    queryKey: ["pdfs"],
+    queryFn: async () => {
+      const response = await apiClient.get("/pixel/pdfs");
+      return response.data;
     },
-    {
-      id: 2,
-      filename: "Data Structures & Algorithms.pdf",
-      uploadDate: "2025-08-14",
-      status: "ready",
-      topics: 15,
-      quizzes: 25,
-      flashcards: 78,
-    },
-    {
-      id: 3,
-      filename: "Python Programming Guide.pdf",
-      uploadDate: "2025-08-13",
-      status: "processing",
-      topics: 0,
-      quizzes: 0,
-      flashcards: 0,
-    },
-  ]);
+  });
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "ready":
-        return "text-green-600 bg-green-50 border-green-200 dark:text-green-400 dark:bg-green-950 dark:border-green-900";
-      case "processing":
-        return "text-yellow-600 bg-yellow-50 border-yellow-200 dark:text-yellow-400 dark:bg-yellow-950 dark:border-yellow-900";
-      case "error":
-        return "text-destructive bg-destructive/10 border-destructive/20";
-      default:
-        return "text-muted-foreground bg-muted border-border";
-    }
-  };
+  const pdfSummeriesQuery = useQueries({
+    queries: (pdfQuery.data ?? []).map((pdf: any) => ({
+      queryKey: ["pdfSummary", pdf.id],
+      queryFn: async () => {
+        const response = await apiClient.get(`/pixel/pdfs/${pdf.id}/summaries`);
+        return response.data;
+      },
+      enabled: !!pdf.id,
+    })),
+  });
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "ready":
-        return "Ready";
-      case "processing":
-        return "Processing...";
-      case "error":
-        return "Error";
-      default:
-        return "Unknown";
-    }
-  };
-
-  // My
-  const navigate = useNavigate();
-  const { logout } = useContext(AuthContext);
-  function handleLogout() {
-    logout();
-    navigate({
-      to: "/",
-    });
+  if (pdfQuery.isLoading && pdfSummeriesQuery.some((query) => query.isLoading)) {
+    return <div>Loading...</div>;
   }
+
+  const pdfSummaries = pdfSummeriesQuery.map((query) => query.data);
+  console.log(pdfSummaries);
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="bg-card border-b border-border sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-                  <Sparkles className="w-6 h-6 text-primary-foreground" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-foreground">
-                    Pixel AI
-                  </h1>
-                  <p className="text-sm text-muted-foreground">
-                    Smart Learning Platform
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3">
-              <Button variant="outline" size="sm" onClick={handleLogout}>
-                <LogOut className="w-4 h-4" />
-                Logout
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div className="max-w-7xl mx-auto px-6 py-8">
         <UploadPdf />
 
@@ -148,94 +48,109 @@ function RouteComponent() {
             <h2 className="text-2xl font-bold text-foreground">
               Your Documents
             </h2>
-            <div className="flex items-center space-x-2">
-              <Button variant="outline" size="sm">
-                <Download className="w-4 h-4 mr-2" />
-                Export All
-              </Button>
+          </div>
+
+          {pdfQuery.isLoading ? (
+            <div>Loading...</div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+              {pdfQuery.data.map((pdf: any) => (
+                <Card
+                  key={pdf.id}
+                  className="group relative overflow-hidden border border-neutral-100 shadow-md hover:shadow-xl transition-all duration-300 transform bg-gradient-to-br from-white via-gray-50/50 to-primary/5 dark:from-gray-900 dark:via-gray-800/50 dark:to-primary/10"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                  <CardContent className="p-6 relative z-10">
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center space-x-4">
+                        <div className="relative">
+                          <div className="w-14 h-14 bg-gradient-to-br from-primary/20 to-primary/10 rounded-xl flex items-center justify-center shadow-lg border border-primary/20">
+                            <FileText className="w-7 h-7 text-primary" />
+                          </div>
+                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-gray-900 flex items-center justify-center">
+                            <div className="w-2 h-2 bg-white rounded-full" />
+                          </div>
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-bold text-lg text-foreground truncate group-hover:text-primary transition-colors duration-200 mb-1">
+                            {pdf.name}
+                          </h3>
+                          <p className="text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-full inline-block">
+                            Ready to study
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4 mb-6">
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950/50 dark:to-blue-900/30 rounded-xl p-4 border border-blue-200/50 dark:border-blue-800/50 hover:shadow-md transition-all duration-200">
+                          <div className="flex flex-col items-center text-center space-y-2">
+                            <div className="w-8 h-8 bg-blue-500/10 rounded-lg flex items-center justify-center">
+                              <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                            </div>
+                            <div className="text-lg font-bold text-blue-700 dark:text-blue-300">
+                              {pdf.topics || 0}
+                            </div>
+                            <div className="text-xs font-medium text-blue-600/80 dark:text-blue-400/80">
+                              Topics
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 dark:from-purple-950/50 dark:to-purple-900/30 rounded-xl p-4 border border-purple-200/50 dark:border-purple-800/50 hover:shadow-md transition-all duration-200">
+                          <div className="flex flex-col items-center text-center space-y-2">
+                            <div className="w-8 h-8 bg-purple-500/10 rounded-lg flex items-center justify-center">
+                              <Brain className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                            </div>
+                            <div className="text-lg font-bold text-purple-700 dark:text-purple-300">
+                              {pdf.quizzes || 0}
+                            </div>
+                            <div className="text-xs font-medium text-purple-600/80 dark:text-purple-400/80">
+                              Quizzes
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-950/50 dark:to-emerald-900/30 rounded-xl p-4 border border-emerald-200/50 dark:border-emerald-800/50 hover:shadow-md transition-all duration-200">
+                          <div className="flex flex-col items-center text-center space-y-2">
+                            <div className="w-8 h-8 bg-emerald-500/10 rounded-lg flex items-center justify-center">
+                              <PenTool className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                            </div>
+                            <div className="text-lg font-bold text-emerald-700 dark:text-emerald-300">
+                              {pdf.cards || 0}
+                            </div>
+                            <div className="text-xs font-medium text-emerald-600/80 dark:text-emerald-400/80">
+                              Cards
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                  <CardFooter className="p-6 pt-0 relative z-10">
+                    <div className="w-full">
+                      <Link
+                        to="/quizzes"
+                        search={{ pdf_id: pdf.id }}
+                        className="block w-full"
+                      >
+                        <Button
+                          variant="outline"
+                          className="w-full bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20 hover:bg-primary hover:text-primary-foreground transition-all duration-200 font-medium shadow-sm hover:shadow-md"
+                        >
+                          <Brain className="w-4 h-4 mr-2" />
+                          Quizzes
+                        </Button>
+                      </Link>
+                    </div>
+                  </CardFooter>
+                </Card>
+              ))}
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {pdfs.map((pdf) => (
-              <Card key={pdf.id}>
-                <CardContent>
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-12 h-12 bg-destructive/10 rounded-lg flex items-center justify-center">
-                        <FileText className="w-6 h-6 text-destructive" />
-                      </div>
-
-                      <div className="min-w-0">
-                        <h3 className="font-semibold text-foreground truncate group-hover:text-primary transition-colors">
-                          {pdf.filename}
-                        </h3>
-
-                        <p className="text-sm text-muted-foreground flex items-center">
-                          <Clock className="w-3 h-3 mr-1" />
-                          {pdf.uploadDate}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {pdf.status === "ready" && (
-                    <div className="space-y-3 mb-4">
-                      <div className="grid grid-cols-3 gap-3 text-center">
-                        <div className="bg-primary/10 rounded-lg p-3">
-                          <BookOpen className="w-5 h-5 text-primary mx-auto mb-1" />
-                          <div className="text-sm font-semibold text-foreground">
-                            {pdf.topics}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            Topics
-                          </div>
-                        </div>
-                        <div className="bg-secondary/50 rounded-lg p-3">
-                          <Brain className="w-5 h-5 text-secondary-foreground mx-auto mb-1" />
-                          <div className="text-sm font-semibold text-foreground">
-                            {pdf.quizzes}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            Quizzes
-                          </div>
-                        </div>
-                        <div className="bg-accent/50 rounded-lg p-3">
-                          <PenTool className="w-5 h-5 text-accent-foreground mx-auto mb-1" />
-                          <div className="text-sm font-semibold text-foreground">
-                            {pdf.flashcards}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            Cards
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      disabled={pdf.status !== "ready"}
-                    >
-                      <Eye className="w-4 h-4 mr-2" />
-                      View
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="flex-1"
-                      disabled={pdf.status !== "ready"}
-                    >
-                      Study
-                      <ChevronRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          )}
         </div>
       </div>
     </div>

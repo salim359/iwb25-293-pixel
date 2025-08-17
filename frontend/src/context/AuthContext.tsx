@@ -42,6 +42,8 @@ export const initialAuthContext: AuthContextType = {
   isAuthenticated: () => false,
 };
 
+const permissions = ["pdfs:*", "quizzes:*", "flashcards:*"];
+
 export const AuthContext = createContext<AuthContextType>(initialAuthContext);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -56,7 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       id: decoded.user_id,
       name: "",
       email: decoded.email,
-      permissions: ["pdfs:*"],
+      permissions,
     });
   }
 
@@ -78,6 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     (async () => {
       try {
         const user = localStorage.getItem("user");
+        await new Promise((resolve) => setTimeout(resolve, 500));
         if (!user) {
           setUser(null);
           setIsLoading(false);
@@ -88,7 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           id: userParsed.user_id,
           name: "",
           email: userParsed.email,
-          permissions: ["pdfs:*"],
+          permissions,
         });
 
         console.log("user from local storage", userParsed);
@@ -110,11 +113,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         {/* Loading Text */}
         <div className="mt-6 text-center">
-          <h3 className="text-lg font-semibold text-yellow-700 animate-pulse">
+          <h3 className="text-lg font-semibold text-purple-700 animate-pulse">
             Getting things ready...
           </h3>
-          <p className="text-sm text-yellow-600 mt-2">
-            Our busy bee is preparing your workspace! 🍯
+          <p className="text-sm text-purple-600 mt-2">
+            We are preparing your workspace!
           </p>
         </div>
       </div>

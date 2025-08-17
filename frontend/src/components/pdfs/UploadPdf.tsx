@@ -39,6 +39,8 @@ export default function UploadPdf() {
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
+
+
     },
     onError: (error: any) => {
       console.error("Upload failed:", error);

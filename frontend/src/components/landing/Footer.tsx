@@ -25,11 +25,11 @@ export default function Footer() {
               <div className="bg-primary p-3 rounded-lg">
                 <Rocket className="size-12 text-primary-foreground" />
               </div>
-              <span className="text-2xl font-bold">FlashGenius</span>
+              <span className="text-2xl font-bold">Pixel AI</span>
             </div>
             <p className="text-muted-foreground text-lg leading-relaxed mb-6">
-              AI-powered platform to generate flashcards, practice questions,
-              and exam predictions for any subject—instantly.
+              AI-powered platform to generate flashcards, quizzes, and exam
+              predictions for any subject—instantly, with Pixel AI.
             </p>
             <div className="flex space-x-4">
               <a
@@ -54,7 +54,7 @@ export default function Footer() {
                 <Github className="w-5 h-5" />
               </a>
               <a
-                href="mailto:hello@careersync.com"
+                href="mailto:hello@pixelai.com"
                 className="bg-accent hover:bg-primary p-3 rounded-xl transition-colors duration-200"
                 aria-label="Email"
               >
@@ -65,14 +65,14 @@ export default function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-xl font-semibold mb-6">Platform</h3>
+            <h3 className="text-xl font-semibold mb-6">Pixel AI Platform</h3>
             <ul className="space-y-4">
               <li>
                 <Link
                   to="/"
                   className="text-muted-foreground hover:text-foreground transition-colors duration-200"
                 >
-                  Flashcard Generator
+                  Flashcard Generator (AI)
                 </Link>
               </li>
               <li>
@@ -80,7 +80,7 @@ export default function Footer() {
                   to="/"
                   className="text-muted-foreground hover:text-foreground transition-colors duration-200"
                 >
-                  Question Creator
+                  Quiz Generator
                 </Link>
               </li>
               <li>
@@ -88,7 +88,7 @@ export default function Footer() {
                   to="/"
                   className="text-muted-foreground hover:text-foreground transition-colors duration-200"
                 >
-                  Exam Predictions
+                  Exam Predictions (AI)
                 </Link>
               </li>
               <li>
@@ -112,7 +112,7 @@ export default function Footer() {
 
           {/* Resources */}
           <div>
-            <h3 className="text-xl font-semibold mb-6">Resources</h3>
+            <h3 className="text-xl font-semibold mb-6">Pixel AI Resources</h3>
             <ul className="space-y-4">
               <li>
                 <a
@@ -127,7 +127,7 @@ export default function Footer() {
                   href="#"
                   className="text-muted-foreground hover:text-foreground transition-colors duration-200"
                 >
-                  Study Tips
+                  AI Study Tips
                 </a>
               </li>
               <li>
@@ -143,7 +143,7 @@ export default function Footer() {
                   href="#"
                   className="text-muted-foreground hover:text-foreground transition-colors duration-200"
                 >
-                  Success Stories
+                  Pixel AI Success Stories
                 </a>
               </li>
               <li>
@@ -151,7 +151,7 @@ export default function Footer() {
                   href="#"
                   className="text-muted-foreground hover:text-foreground transition-colors duration-200"
                 >
-                  API Documentation
+                  Pixel AI API Documentation
                 </a>
               </li>
             </ul>
@@ -159,7 +159,7 @@ export default function Footer() {
 
           {/* Contact */}
           <div>
-            <h3 className="text-xl font-semibold mb-6">Contact</h3>
+            <h3 className="text-xl font-semibold mb-6">Contact Pixel AI</h3>
             <ul className="space-y-4">
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-muted-foreground mt-0.5" />
@@ -180,10 +180,10 @@ export default function Footer() {
               <li className="flex items-center gap-3">
                 <Mail className="w-5 h-5 text-muted-foreground" />
                 <a
-                  href="mailto:hello@flashgenius.com"
+                  href="mailto:hello@pixelai.com"
                   className="text-muted-foreground hover:text-foreground transition-colors duration-200"
                 >
-                  hello@flashgenius.com
+                  hello@pixelai.com
                 </a>
               </li>
             </ul>
@@ -195,7 +195,7 @@ export default function Footer() {
           <div className="bg-primary/10 rounded-2xl p-8 text-center">
             <h3 className="text-2xl font-bold mb-4">Stay in the Loop</h3>
             <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-              Get the latest updates on new AI features, study tips, and
+              Get the latest updates on new Pixel AI features, study tips, and
               platform news delivered to your inbox.
             </p>
             <div className="flex flex-col lg:flex-row gap-4 max-w-md mx-auto">
@@ -217,7 +217,7 @@ export default function Footer() {
         <div className="lg:mx-24 mx-2 py-6">
           <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-2 text-muted-foreground">
-              <span>© {currentYear} FlashGenius. Made with</span>
+              <span>© {currentYear} Pixel AI. Made with</span>
               <Heart className="w-4 h-4 text-red-500" />
               <span>in Colombo</span>
             </div>

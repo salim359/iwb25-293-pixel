@@ -19,19 +19,21 @@ export default function CTA() {
             <div className="flex items-center gap-2 bg-primary/10 backdrop-blur-sm rounded-full px-4 py-2 border border-primary/20">
               <Sparkles className="w-5 h-5 text-primary" />
               <span className="text-sm font-medium text-primary">
-                Study Smarter with AI
+                Study Smarter with Pixel AI
               </span>
             </div>
           </div>
 
           <h2 className="text-4xl lg:text-6xl font-bold mb-6 leading-tight">
-            Ready to boost your <span className="text-primary">learning?</span>
+            Ready to boost your <span className="text-primary">learning</span>{" "}
+            with Pixel AI?
           </h2>
 
           <p className="text-xl lg:text-2xl mb-12 max-w-3xl mx-auto text-muted-foreground leading-relaxed">
-            Join thousands of students and lifelong learners using FlashGenius
-            to generate flashcards, practice questions, and exam
-            predictions—instantly, for any subject.
+            Join thousands of students and lifelong learners using{" "}
+            <span className="font-semibold text-primary">Pixel AI</span> to
+            generate flashcards, quizzes, and exam predictions—instantly, for
+            any subject.
           </p>
 
           {/* Stats */}
@@ -41,21 +43,27 @@ export default function CTA() {
                 <Users className="w-8 h-8 text-primary" />
               </div>
               <div className="text-3xl font-bold text-foreground">10,000+</div>
-              <div className="text-muted-foreground">Flashcards Generated</div>
+              <div className="text-muted-foreground">
+                Flashcards Generated with Pixel AI
+              </div>
             </div>
             <div className="flex flex-col items-center">
               <div className="bg-primary/10 backdrop-blur-sm rounded-2xl p-4 mb-3 border border-primary/20">
                 <Briefcase className="w-8 h-8 text-primary" />
               </div>
               <div className="text-3xl font-bold text-foreground">5,000+</div>
-              <div className="text-muted-foreground">Questions Created</div>
+              <div className="text-muted-foreground">
+                Quizzes & Questions Created
+              </div>
             </div>
             <div className="flex flex-col items-center">
               <div className="bg-primary/10 backdrop-blur-sm rounded-2xl p-4 mb-3 border border-primary/20">
                 <Sparkles className="w-8 h-8 text-primary" />
               </div>
               <div className="text-3xl font-bold text-foreground">98%</div>
-              <div className="text-muted-foreground">User Satisfaction</div>
+              <div className="text-muted-foreground">
+                User Satisfaction Rate
+              </div>
             </div>
           </div>
 
@@ -66,7 +74,7 @@ export default function CTA() {
                 size="lg"
                 className="bg-primary text-primary-foreground h-14 !px-8 text-lg font-semibold rounded-full shadow-lg duration-200 group border border-primary hover:bg-primary/90"
               >
-                Generate Flashcards
+                Generate with Pixel AI
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
               </Button>
             </Link>
@@ -76,13 +84,13 @@ export default function CTA() {
                 variant="outline"
                 className="border-2 border-accent text-primary hover:text-primary h-14 px-8 text-lg font-semibold rounded-full bg-background backdrop-blur-sm"
               >
-                Try Question Creator
+                Try Quiz Generator
               </Button>
             </Link>
           </div>
 
           <p className="text-muted-foreground text-sm mt-6">
-            No credit card required • Free to start • Study smarter today
+            No credit card required • Free to start • Powered by Pixel AI
           </p>
         </div>
       </div>

@@ -14,10 +14,6 @@ public type User record {|
     minLength: {
         value: 5,
         message: "UserName should have atleast 5 characters"
-    },
-    maxLength: {
-        value: 12,
-        message: "UserName can have atmost 12 characters"
     }
 }
 public type Username string;
@@ -32,13 +28,10 @@ public type Email string;
 
 @constraint:String {
     minLength: {
-        value: 7,
-        message: "Password must be at least 7 characters long"
-    },
-    maxLength: {
-        value: 15,
-        message: "Password can be at most 15 characters long"
+        value: 8,
+        message: "Password must be at least 8 characters long"
     }
+    
 }
 public type Password string;
 
@@ -76,11 +69,14 @@ public type Flashcard record {|
 |};
 
 public type PdfText record {|
+    int id;
     int user_id;
     string file_name;
     string upload_date = time:utcNow().toString();
     string extracted_text;
 |};
+
+
 
 public type Topic record {|
     readonly int id;
@@ -89,10 +85,10 @@ public type Topic record {|
     string description;
 |};
 
-public type TopicTitle record {|
-    readonly int id;
-    string title;
-|};
+// public type TopicTitle record {|
+//     readonly int id;
+//     string title;
+// |};
 
 public type ErrorDetails record {|
     string message;

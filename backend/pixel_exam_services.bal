@@ -1,7 +1,7 @@
 import ballerina/http;
-// import ballerina/io;
 import ballerina/jwt;
 import ballerina/sql;
+import ballerina/time;
 
 public function generateExam(int pdfId, http:Request req) returns json|NotFoundError|UnauthorizedError|error {
 
@@ -88,7 +88,7 @@ public function generateExam(int pdfId, http:Request req) returns json|NotFoundE
                             );
                         }
                     }
-                    return <json>{"message": examArray.length().toString() + " exams extracted and stored"};
+                    return <json>{"message": examArray.length().toString() + " exams extracted and stored", "examId": examId};
                 } else {
                     return error("Extracted exams is not a JSON array");
                 }
@@ -108,12 +108,28 @@ public function getExam(int examId, http:Request req) returns Exam[]|NotFoundErr
     if (authResult is UnauthorizedError) {
         return authResult;
     }
-    // int? userId = <int?>authResult["user_id"];
+    int? userId = <int?>authResult["user_id"];
+
+    int|sql:Error validExamId = check dbClient->queryRow(`SELECT id FROM exams WHERE id = ${examId} AND user_id = ${userId}`);
+    if validExamId is sql:Error {
+        UnauthorizedError unauthorizedError = {
+            body: {
+                message: "Unauthorized access",
+                details: "You do not have permission to access this exam",
+                timestamp: time:utcNow()
+            }
+        };
+        return unauthorizedError;
+    }
 
     stream<Exam, sql:Error?> examStream = dbClient->query(`SELECT * FROM exam_question WHERE exam_id = ${examId} ORDER BY sequence ASC`, Exam);
-    // Exam[] examResult = [];
-
-    return from var exam in examStream
+    Exam[]|sql:Error examResult = from var exam in examStream
         select exam;
+    if examResult is sql:Error {
+        // If no exam questions found, return empty array
+        return [];
+    }
+    return examResult;
 
 }
+
