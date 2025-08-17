@@ -371,12 +371,16 @@ public function adduserprogress(http:Request req) returns json|UnauthorizedError
         return evaluationResult;
     }
     int score = 0;
-
+    string answerResult = "";
+    
     if evaluationResult == "yes" {
         score = 10;
+        answerResult = "Correct";
+        
     }
     else {
         score = 0;
+        answerResult = "Incorrect";
     }
     // Check if a progress record exists
     record {|int count;|}|error countResult = dbClient->queryRow(
@@ -396,10 +400,12 @@ public function adduserprogress(http:Request req) returns json|UnauthorizedError
             `INSERT INTO user_progress (user_id, quiz_id, score) VALUES (${userId}, ${quizId}, ${score})`
         );
     }
+        
     return {
-        "message": "User progress updated successfully",
-        "score": score
-    };
+        "message":"User progress updated successfully",
+        "status":answerResult,
+        "answer":answer
+        };
 }
 
 public function getuserprogressperquizset(int topicId, http:Request req) returns json|NotFoundError|UnauthorizedError|error {
@@ -443,4 +449,6 @@ public function getuserprogress(http:Request req) returns json|NotFoundError|Una
     }
     return {score: userProgress.score};
 }
+
+
 

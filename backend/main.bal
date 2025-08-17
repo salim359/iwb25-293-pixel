@@ -119,6 +119,6 @@ service /pixel on pixelListener {
     resource function get pdfs/[int pdfId]/examquestions(http:Request req) returns Exam[]|NotFoundError|UnauthorizedError|error {
         return getExam(pdfId, req);
     }
-    
+
 
 }

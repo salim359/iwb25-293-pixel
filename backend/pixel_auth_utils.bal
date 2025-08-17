@@ -89,7 +89,7 @@ function AuthorizedPdfAccess(int pdf_id, int? user_id) returns boolean {
     return true;
 }
 
-function evaluateAnswer(string question, string answer, string userAnswer) returns json|error {
+ function evaluateAnswer(string question, string answer, string userAnswer) returns json|error {
     string prompt = "Evaluate the following question and answer:\n" +
         "Question: " + question +
         "\nCorrect Answer: " + answer +
@@ -99,7 +99,7 @@ function evaluateAnswer(string question, string answer, string userAnswer) retur
     json openAIReq = {
         "model": modelConfig.model,
         "messages": [
-            {"role": "system", "content": "You are an AI that evaluates if a user's answer expresses the same main idea as the correct answer. Respond only with 'yes' or 'no'."},
+            {"role": "system", "content": "You are an AI that evaluates if a user's answer expresses the same main idea as the correct answer. Respond  with 'yes' or 'no'."},
             {"role": "user", "content": prompt}
         ],
         "max_tokens": 1500,
