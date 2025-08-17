@@ -76,11 +76,14 @@ public type Flashcard record {|
 |};
 
 public type PdfText record {|
+    int id;
     int user_id;
     string file_name;
     string upload_date = time:utcNow().toString();
     string extracted_text;
 |};
+
+
 
 public type Topic record {|
     readonly int id;
