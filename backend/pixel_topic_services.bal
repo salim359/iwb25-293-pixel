@@ -99,11 +99,11 @@ import ballerina/time;
         if (authResult is UnauthorizedError) {
             return authResult; // UnauthorizedError (includes expiry, invalid, or missing token)
         }
-        stream<TopicTitle, sql:Error?> topicStream =
-            dbClient->query(`SELECT title,id FROM topics WHERE pdf_id = ${id}`, TopicTitle);
+        stream<Topic, sql:Error?> topicStream =
+            dbClient->query(`SELECT * FROM topics WHERE pdf_id = ${id}`, Topic);
 
         return from var topic in topicStream
-            select {title: topic.title, id: topic.id};
+            select {title: topic.title, description: topic.description, id: topic.id};
     }
 
     //get 1 topic  make this
