@@ -3,6 +3,18 @@ import ballerina/sql;
 
 listener http:Listener pixelListener = new (8080);
 
+// CORS configuration
+@http:ServiceConfig {
+    cors: {
+        allowOrigins: [...corsConfig.allowOrigins],
+        allowCredentials: corsConfig.allowCredentials,
+        allowHeaders: [...corsConfig.allowHeaders],
+        allowMethods: [...corsConfig.allowMethods],
+        exposeHeaders: [...corsConfig.exposeHeaders],
+        maxAge: <decimal>corsConfig.maxAge
+    }
+}
+
 service /pixel on pixelListener {
 
     resource function get users() returns User[]|error {
@@ -81,12 +93,12 @@ service /pixel on pixelListener {
     }
 
 
-     // Retrieve overall user progress
+    // Retrieve overall user progress
     resource function get users/progress(http:Request req) returns json|NotFoundError|UnauthorizedError|error {
         return getuserprogress(req);
     }
 
-      // Retrieve user progress for a specific quiz set
+    // Retrieve user progress for a specific quiz set
     resource function get quizzes/[int quizId]/progress(http:Request req) returns json|NotFoundError|UnauthorizedError|error {
         return getuserprogressperquizset(quizId, req);
     }
@@ -95,7 +107,7 @@ service /pixel on pixelListener {
         return adduserprogress(quizId, req);
     }
 
-      // Generate exam questions for a PDF
+    // Generate exam questions for a PDF
     resource function post pdfs/[int pdfId]/examquestions(http:Request req) returns json|NotFoundError|UnauthorizedError|error? {
         return generateExam(pdfId, req);
     }

@@ -11,7 +11,19 @@ public type DataBaseConfig record {|
     string database;
 |};
 
+public type CorsConfig record {|
+    string[] allowOrigins;
+    boolean allowCredentials;
+    string[] allowHeaders;
+    string[] allowMethods;
+    string[] exposeHeaders;
+    int maxAge;
+|};
+
 public configurable ModelConfig modelConfig = ?;
 public configurable DataBaseConfig databaseConfig = ?;
 public configurable string pdf_extractor_api_key = ?;
 
+// Configuration constants
+public configurable int PORT = 8080;
+public configurable CorsConfig corsConfig = ?;
