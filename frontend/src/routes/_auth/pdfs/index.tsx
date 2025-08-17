@@ -39,7 +39,7 @@ function RouteComponent() {
               {pdfQuery.data.map((pdf: any) => (
                 <Card
                   key={pdf.id}
-                  className="group relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] bg-gradient-to-br from-white via-gray-50/50 to-primary/5 dark:from-gray-900 dark:via-gray-800/50 dark:to-primary/10"
+                  className="group relative overflow-hidden border border-neutral-100 shadow-md hover:shadow-xl transition-all duration-300 transform bg-gradient-to-br from-white via-gray-50/50 to-primary/5 dark:from-gray-900 dark:via-gray-800/50 dark:to-primary/10"
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
