@@ -69,13 +69,13 @@ service /pixel on pixelListener {
         return generatequizes(topicId, req);
     }
     // Retrieve quiz IDs for a topic
-    resource function get topics/[int topicId]/quizzes() returns json|NotFoundError {
-        return getquizId(topicId);
-    }
+    // resource function get topics/[int topicId]/quizzes() returns json|NotFoundError {
+    //     return getquizId(topicId);
+    // }
 
     // Retrieve all quizzes for a quiz set
-    resource function get quizzes/[int quizId](http:Request req) returns Quiz[]|UnauthorizedError|NotFoundError|error {
-        return getquizes(quizId, req);
+    resource function get topics/[int topicId]/quizzes(http:Request req) returns Quiz[]|UnauthorizedError|NotFoundError|error {
+        return getquizes(topicId, req);
     }
     
     // Retrieve a specific quiz question

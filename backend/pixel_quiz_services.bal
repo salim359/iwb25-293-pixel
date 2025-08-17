@@ -12,7 +12,6 @@ public function generatequizes(int topicId, http:Request req) returns json|NotFo
         return authResult; // UnauthorizedError (includes expiry, invalid, or missing token)
     }
     int? userId = <int?>authResult["user_id"];
-    
     int|sql:Error pdfId = dbClient->queryRow(`SELECT pdf_id from topics where id=${topicId}`);
     if pdfId is sql:Error{
         NotFoundError notFoundError = {
@@ -188,7 +187,7 @@ public function generatequizes(int topicId, http:Request req) returns json|NotFo
 }
 
 //get  quizID for a topic
-public function getquizId(int topicId) returns json|NotFoundError {
+public function getquizId(int topicId) returns int|NotFoundError {
     int|sql:Error quizIdResult = dbClient->queryRow(`SELECT id FROM quizzes WHERE topic_id = ${topicId}`);
     if quizIdResult is sql:Error {
         NotFoundError notFoundError = {
@@ -200,19 +199,22 @@ public function getquizId(int topicId) returns json|NotFoundError {
         };
         return notFoundError;
     }
-    return {
-        "quizId": <int>quizIdResult
-    };
+   return quizIdResult;
 }
 
 //for 1 quiz all questions, by using the topicid get the quiz id and from it get all questions related to 1 quiz id(get all questions)
-public function getquizes(int quizId, http:Request req) returns Quiz[]|NotFoundError|UnauthorizedError|error {
+public function getquizes(int topicId, http:Request req) returns Quiz[]|NotFoundError|UnauthorizedError|error {
 
     jwt:Payload|UnauthorizedError authResult = Authorization(req);
     if (authResult is UnauthorizedError) {
         return authResult;
     }
     int userId = <int>authResult["user_id"];
+    int|NotFoundError quizId = getquizId(topicId);
+    if quizId is NotFoundError {
+        return quizId;
+    }
+    
     stream<Quiz, sql:Error?> quizStream =
         dbClient->query(`SELECT * FROM questions WHERE quiz_id=${quizId}`, Quiz);
 
@@ -222,13 +224,13 @@ public function getquizes(int quizId, http:Request req) returns Quiz[]|NotFoundE
     if quizResult is sql:Error {
         return quizResult;
     }
-    int|sql:Error topicId = dbClient->queryRow(`SELECT topic_id FROM quizzes WHERE id = ${quizId}`);
-    if topicId is sql:Error {
-        NotFoundError notFoundError = {
-            body: {message: "Topic not found", details: "No topic exists with the given ID", timestamp: time:utcNow()}
-        };
-        return notFoundError;
-    }
+    // int|sql:Error topicId = dbClient->queryRow(`SELECT topic_id FROM quizzes WHERE id = ${quizId}`);
+    // if topicId is sql:Error {
+    //     NotFoundError notFoundError = {
+    //         body: {message: "Topic not found", details: "No topic exists with the given ID", timestamp: time:utcNow()}
+    //     };
+    //     return notFoundError;
+    // }
     int|sql:Error pdfId = dbClient->queryRow(`SELECT pdf_id FROM topics WHERE id = ${topicId}`);
     if pdfId is sql:Error {
         NotFoundError notFoundError = {
