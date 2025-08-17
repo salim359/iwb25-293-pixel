@@ -15,7 +15,7 @@ import {
   Target,
   Trophy,
 } from "lucide-react";
-import Generate from "@/components/flashcards/Generate";
+import Generate from "@/components/flashcards/GenerateFlashcards";
 
 const quizSearchSchema = z.object({
   topic_id: z.number().optional(),

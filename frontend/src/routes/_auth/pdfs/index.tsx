@@ -4,7 +4,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { FileText, BookOpen, Brain, PenTool } from "lucide-react";
 import UploadPdf from "@/components/pdfs/UploadPdf";
 import apiClient from "@/lib/apiClient";
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/_auth/pdfs/")({
   component: RouteComponent,
@@ -18,6 +18,24 @@ function RouteComponent() {
       return response.data;
     },
   });
+
+  const pdfSummeriesQuery = useQueries({
+    queries: (pdfQuery.data ?? []).map((pdf: any) => ({
+      queryKey: ["pdfSummary", pdf.id],
+      queryFn: async () => {
+        const response = await apiClient.get(`/pixel/pdfs/${pdf.id}/summaries`);
+        return response.data;
+      },
+      enabled: !!pdf.id,
+    })),
+  });
+
+  if (pdfQuery.isLoading && pdfSummeriesQuery.some((query) => query.isLoading)) {
+    return <div>Loading...</div>;
+  }
+
+  const pdfSummaries = pdfSummeriesQuery.map((query) => query.data);
+  console.log(pdfSummaries);
 
   return (
     <div className="min-h-screen bg-background">

@@ -6,7 +6,7 @@ import {
 } from "@tanstack/react-router";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import logo from "../assets/logo.svg";
+import logo from "@/assets/logo.svg";
 import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
