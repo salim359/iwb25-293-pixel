@@ -1,36 +1,14 @@
 import Loading from "@/components/Loading";
+import Question from "@/components/questions/Question";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import apiClient from "@/lib/apiClient";
-import { useQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
-import {
-  BookOpen,
-  CheckCircle,
-  XCircle,
-  Clock,
-  Trophy,
-  RotateCcw,
-  Play,
-} from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { BookOpen } from "lucide-react";
 import { useState } from "react";
 import z from "zod";
-
-interface Question {
-  id: number;
-  quiz_id: number;
-  question_text: string;
-  question_type: "MCQ" | "TRUE_FALSE" | "SHORT_ANSWER";
-  options: string[];
-  correct_answer: string;
-  created_at: string;
-}
-
-interface QuizAttempt {
-  questionId: number;
-  selectedAnswer: string;
-  isCorrect: boolean;
-}
 
 const quizSearchSchema = z.object({
   topic_id: z.number().optional(),
@@ -43,16 +21,37 @@ export const Route = createFileRoute("/_auth/questions/")({
 
 function RouteComponent() {
   const { topic_id } = Route.useSearch();
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const { history } = useRouter();
+  const queryClient = useQueryClient();
+  const [score, setScore] = useState<number | null>(null);
+  const [numberOfQuestionsAnswered, setNumberOfQuestionsAnswered] =
+    useState<number>(0);
 
   const questionsQuery = useQuery({
     queryKey: ["questions", { topic_id }],
     queryFn: async () => {
       const response = await apiClient.get(`pixel/topics/${topic_id}/quizzes`);
+      console.log(response.data);
+
       return response.data;
     },
     retry: false,
     enabled: !!topic_id,
+  });
+
+  const generateQuestionsMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiClient.post(`pixel/topics/${topic_id}/quizzes`);
+      return response.data;
+    },
+    onError: (error) => {
+      console.error("Error generating questions:", error);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["questions", { topic_id }],
+      });
+    },
   });
 
   if (!topic_id) {
@@ -73,6 +72,10 @@ function RouteComponent() {
     );
   }
 
+  if (questionsQuery.isLoading) {
+    return <Loading message="Loading questions..." />;
+  }
+
   if (questionsQuery.isError) {
     return (
       <div className="min-h-[90vh] flex items-center justify-center">
@@ -85,7 +88,12 @@ function RouteComponent() {
               <p className="text-muted-foreground mb-4">
                 We couldn't find any questions for this topic.
               </p>
-              <Button>Generate Questions</Button>
+              <Button
+                onClick={() => generateQuestionsMutation.mutate()}
+                disabled={generateQuestionsMutation.isPending}
+              >
+                Generate Questions
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -93,78 +101,59 @@ function RouteComponent() {
     );
   }
 
-  const currentQuestion = questionsQuery.data[currentQuestionIndex];
-
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-muted-foreground">
-            Question {currentQuestionIndex + 1} of {questionsQuery.data.length}
-          </span>
-          <span className="text-sm text-muted-foreground">
-            {Math.round(
-              ((currentQuestionIndex + 1) / questionsQuery.data.length) * 100
-            )}
-            % Complete
-          </span>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
-          <div
-            className="bg-primary h-2 rounded-full transition-all duration-300"
-            style={{
-              width: `${((currentQuestionIndex + 1) / questionsQuery.data.length) * 100}%`,
-            }}
-          />
-        </div>
-      </div>
-
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle className="text-xl leading-relaxed">
-            {currentQuestion?.question_text}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-3">
-            {currentQuestion?.options?.map((option: string, index: number) => (
-              <Button
-                key={index}
-                variant="outline"
-                className="w-full text-left justify-start h-auto p-4 text-wrap"
-                // onClick={() => handleAnswerSelect(option)}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex-shrink-0 w-6 h-6 rounded-full border-2 border-current flex items-center justify-center text-xs font-medium">
-                    {String.fromCharCode(65 + index)}
-                  </div>
-                  <span className="flex-1">{option}</span>
-                </div>
-              </Button>
-            ))}
+      {/* Beautiful Score Section */}
+      <Card className="mb-8 border-primary/20">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-2xl font-bold text-foreground">
+                Quiz Progress
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Track your performance
+              </p>
+            </div>
+            <div className="text-right">
+              <div className="text-3xl font-bold text-primary">
+                {numberOfQuestionsAnswered || 0}/{questionsQuery.data.length}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Questions Answered
+              </div>
+            </div>
           </div>
-
-          {/* <div className="flex justify-between pt-4">
-            <Button
-              variant="outline"
-              onClick={handlePreviousQuestion}
-              disabled={currentQuestionIndex === 0}
-            >
-              Previous
-            </Button>
-
-            <Button
-              onClick={handleNextQuestion}
-              disabled={!selectedAnswers[currentQuestionIndex]}
-              className="px-6"
-            >
-              {currentQuestionIndex === questions.length - 1
-                ? "Complete Quiz"
-                : "Next Question"}
-            </Button>
-          </div> */}
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Score</span>
+              <span className="font-medium text-primary">
+                {Math.round(((score || 0) / questionsQuery.data.length) * 100)}%
+              </span>
+            </div>
+            <Progress
+              value={((score || 0) / questionsQuery.data.length) * 100}
+              className="h-3"
+            />
+          </div>
         </CardContent>
       </Card>
+
+      <div className="space-y-6">
+        {questionsQuery.data.map((question: any) => (
+          <Question
+            key={question.id}
+            question={question}
+            topic_id={topic_id}
+            setScore={setScore}
+            setNumberOfQuestionsAnswered={setNumberOfQuestionsAnswered}
+          />
+        ))}
+      </div>
+
+      <div className="mt-8 flex justify-center">
+        <Button onClick={() => history.go(-1)}>Try Other Topics</Button>
+      </div>
     </div>
   );
 }

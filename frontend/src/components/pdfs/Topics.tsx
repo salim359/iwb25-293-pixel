@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Loading from "@/components/Loading";
 import { toast } from "sonner";
 import Summary from "@/components/pdfs/Summary";
-import { FileStack } from "lucide-react";
+import { FileStack, Loader2Icon } from "lucide-react";
 
 export default function Topics(props: { pdf_id: number | undefined }) {
   const queryClient = useQueryClient();
@@ -60,38 +60,34 @@ export default function Topics(props: { pdf_id: number | undefined }) {
           <Loading message="Loading your topics..." />
         </Card>
       ) : topicsQuery.data.length ? (
-        <Card>
-          <CardContent>
-            <div className="space-y-3">
-              {topicsQuery.data.map((topic: any) => (
-                <Card key={topic.id}>
-                  <CardContent>
-                    <h3 className="font-semibold text-gray-900">
-                      {topic.title}
-                    </h3>
-                    {topic.description && (
-                      <p className="text-gray-600 mt-2 text-xs">
-                        {topic.description}
-                      </p>
-                    )}
-                    <div className="mt-4 space-x-2">
-                      <Link to="/flashcards" search={{ topic_id: topic.id }}>
-                        <Button size="sm" className="rounded-sm">
-                          Flashcards
-                        </Button>
-                      </Link>
-                      <Link to="/questions" search={{ topic_id: topic.id }}>
-                        <Button size="sm" className="rounded-sm">
-                          Questions
-                        </Button>
-                      </Link>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <div>
+          <div className="space-y-3">
+            {topicsQuery.data.map((topic: any) => (
+              <Card key={topic.id}>
+                <CardContent>
+                  <h3 className="font-semibold text-gray-900">{topic.title}</h3>
+                  {topic.description && (
+                    <p className="text-gray-600 mt-2 text-xs">
+                      {topic.description}
+                    </p>
+                  )}
+                  <div className="mt-4 space-x-2">
+                    <Link to="/flashcards" search={{ topic_id: topic.id }}>
+                      <Button size="sm" className="rounded-sm">
+                        Flashcards
+                      </Button>
+                    </Link>
+                    <Link to="/questions" search={{ topic_id: topic.id }}>
+                      <Button size="sm" className="rounded-sm">
+                        Questions
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
       ) : (
         <Card className="text-center py-16 shadow-sm border border-gray-200 bg-white">
           <CardContent>
@@ -112,16 +108,10 @@ export default function Topics(props: { pdf_id: number | undefined }) {
                 onClick={() => generateTopicsMutation.mutate()}
                 disabled={generateTopicsMutation.isPending}
               >
-                {generateTopicsMutation.isPending ? (
-                  <div className="flex items-center gap-3">
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Generating Topics...</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-3">
-                    <span>Generate Topics</span>
-                  </div>
+                {generateTopicsMutation.isPending && (
+                  <Loader2Icon className="animate-spin" />
                 )}
+                Generate Topics
               </Button>
             </div>
           </CardContent>

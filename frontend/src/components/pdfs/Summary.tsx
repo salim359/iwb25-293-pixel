@@ -5,15 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Loading from "@/components/Loading";
 import { toast } from "sonner";
+import { Loader2Icon } from "lucide-react";
 
 export default function Summary(props: { pdf_id: number | undefined }) {
   const queryClient = useQueryClient();
 
-  
   const summeryQuery = useQuery({
     queryKey: ["summery", props.pdf_id],
     queryFn: async () => {
-      const response = await apiClient.get(`/pixel/pdfs/${props.pdf_id}/summaries`);
+      const response = await apiClient.get(
+        `/pixel/pdfs/${props.pdf_id}/summaries`
+      );
       return response.data;
     },
     retry: false,
@@ -21,7 +23,9 @@ export default function Summary(props: { pdf_id: number | undefined }) {
 
   const generateSummaryMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiClient.post(`/pixel/pdfs/${props.pdf_id}/summaries`);
+      const response = await apiClient.post(
+        `/pixel/pdfs/${props.pdf_id}/summaries`
+      );
       return response.data;
     },
     onError: (error) => {
@@ -91,16 +95,10 @@ export default function Summary(props: { pdf_id: number | undefined }) {
                 onClick={() => generateSummaryMutation.mutate()}
                 disabled={generateSummaryMutation.isPending}
               >
-                {generateSummaryMutation.isPending ? (
-                  <div className="flex items-center gap-3">
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Generating Summary...</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-3">
-                    <span>Generate Summary</span>
-                  </div>
+                {generateSummaryMutation.isPending && (
+                  <Loader2Icon className="animate-spin" />
                 )}
+                Generate Summary
               </Button>
             </div>
           </CardContent>
