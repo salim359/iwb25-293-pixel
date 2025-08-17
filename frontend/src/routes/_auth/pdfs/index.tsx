@@ -1,9 +1,7 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState, useRef, useContext } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState, useContext } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import apiClient from "@/lib/apiClient";
 import {
   FileText,
   BookOpen,
@@ -32,13 +30,6 @@ interface PDF {
   topics?: number;
   quizzes?: number;
   flashcards?: number;
-}
-
-interface Stats {
-  totalPDFs: number;
-  totalTopics: number;
-  totalQuizzes: number;
-  completionRate: number;
 }
 
 function RouteComponent() {
@@ -71,32 +62,6 @@ function RouteComponent() {
       flashcards: 0,
     },
   ]);
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "ready":
-        return "text-green-600 bg-green-50 border-green-200 dark:text-green-400 dark:bg-green-950 dark:border-green-900";
-      case "processing":
-        return "text-yellow-600 bg-yellow-50 border-yellow-200 dark:text-yellow-400 dark:bg-yellow-950 dark:border-yellow-900";
-      case "error":
-        return "text-destructive bg-destructive/10 border-destructive/20";
-      default:
-        return "text-muted-foreground bg-muted border-border";
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "ready":
-        return "Ready";
-      case "processing":
-        return "Processing...";
-      case "error":
-        return "Error";
-      default:
-        return "Unknown";
-    }
-  };
 
   // My
   const navigate = useNavigate();
@@ -148,12 +113,6 @@ function RouteComponent() {
             <h2 className="text-2xl font-bold text-foreground">
               Your Documents
             </h2>
-            <div className="flex items-center space-x-2">
-              <Button variant="outline" size="sm">
-                <Download className="w-4 h-4 mr-2" />
-                Export All
-              </Button>
-            </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -238,6 +197,15 @@ function RouteComponent() {
           </div>
         </div>
       </div>
+
+      <Link
+        to="/quizes"
+        search={{
+          pdf_id: 1,
+        }}
+      >
+        <Button>Quizes of PDF id 1</Button>
+      </Link>
     </div>
   );
 }

@@ -14,7 +14,9 @@ import { Route as AuthRouteRouteImport } from './routes/_auth/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as GuestSignupRouteImport } from './routes/_guest/signup'
 import { Route as GuestLoginRouteImport } from './routes/_guest/login'
+import { Route as AuthQuizesRouteRouteImport } from './routes/_auth/quizes/route'
 import { Route as AuthPdfsRouteRouteImport } from './routes/_auth/pdfs/route'
+import { Route as AuthQuizesIndexRouteImport } from './routes/_auth/quizes/index'
 import { Route as AuthPdfsIndexRouteImport } from './routes/_auth/pdfs/index'
 
 const GuestRouteRoute = GuestRouteRouteImport.update({
@@ -40,10 +42,20 @@ const GuestLoginRoute = GuestLoginRouteImport.update({
   path: '/login',
   getParentRoute: () => GuestRouteRoute,
 } as any)
+const AuthQuizesRouteRoute = AuthQuizesRouteRouteImport.update({
+  id: '/quizes',
+  path: '/quizes',
+  getParentRoute: () => AuthRouteRoute,
+} as any)
 const AuthPdfsRouteRoute = AuthPdfsRouteRouteImport.update({
   id: '/pdfs',
   path: '/pdfs',
   getParentRoute: () => AuthRouteRoute,
+} as any)
+const AuthQuizesIndexRoute = AuthQuizesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthQuizesRouteRoute,
 } as any)
 const AuthPdfsIndexRoute = AuthPdfsIndexRouteImport.update({
   id: '/',
@@ -54,15 +66,18 @@ const AuthPdfsIndexRoute = AuthPdfsIndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/pdfs': typeof AuthPdfsRouteRouteWithChildren
+  '/quizes': typeof AuthQuizesRouteRouteWithChildren
   '/login': typeof GuestLoginRoute
   '/signup': typeof GuestSignupRoute
   '/pdfs/': typeof AuthPdfsIndexRoute
+  '/quizes/': typeof AuthQuizesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof GuestLoginRoute
   '/signup': typeof GuestSignupRoute
   '/pdfs': typeof AuthPdfsIndexRoute
+  '/quizes': typeof AuthQuizesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -70,24 +85,35 @@ export interface FileRoutesById {
   '/_auth': typeof AuthRouteRouteWithChildren
   '/_guest': typeof GuestRouteRouteWithChildren
   '/_auth/pdfs': typeof AuthPdfsRouteRouteWithChildren
+  '/_auth/quizes': typeof AuthQuizesRouteRouteWithChildren
   '/_guest/login': typeof GuestLoginRoute
   '/_guest/signup': typeof GuestSignupRoute
   '/_auth/pdfs/': typeof AuthPdfsIndexRoute
+  '/_auth/quizes/': typeof AuthQuizesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/pdfs' | '/login' | '/signup' | '/pdfs/'
+  fullPaths:
+    | '/'
+    | '/pdfs'
+    | '/quizes'
+    | '/login'
+    | '/signup'
+    | '/pdfs/'
+    | '/quizes/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/signup' | '/pdfs'
+  to: '/' | '/login' | '/signup' | '/pdfs' | '/quizes'
   id:
     | '__root__'
     | '/'
     | '/_auth'
     | '/_guest'
     | '/_auth/pdfs'
+    | '/_auth/quizes'
     | '/_guest/login'
     | '/_guest/signup'
     | '/_auth/pdfs/'
+    | '/_auth/quizes/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -133,12 +159,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GuestLoginRouteImport
       parentRoute: typeof GuestRouteRoute
     }
+    '/_auth/quizes': {
+      id: '/_auth/quizes'
+      path: '/quizes'
+      fullPath: '/quizes'
+      preLoaderRoute: typeof AuthQuizesRouteRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
     '/_auth/pdfs': {
       id: '/_auth/pdfs'
       path: '/pdfs'
       fullPath: '/pdfs'
       preLoaderRoute: typeof AuthPdfsRouteRouteImport
       parentRoute: typeof AuthRouteRoute
+    }
+    '/_auth/quizes/': {
+      id: '/_auth/quizes/'
+      path: '/'
+      fullPath: '/quizes/'
+      preLoaderRoute: typeof AuthQuizesIndexRouteImport
+      parentRoute: typeof AuthQuizesRouteRoute
     }
     '/_auth/pdfs/': {
       id: '/_auth/pdfs/'
@@ -162,12 +202,26 @@ const AuthPdfsRouteRouteWithChildren = AuthPdfsRouteRoute._addFileChildren(
   AuthPdfsRouteRouteChildren,
 )
 
+interface AuthQuizesRouteRouteChildren {
+  AuthQuizesIndexRoute: typeof AuthQuizesIndexRoute
+}
+
+const AuthQuizesRouteRouteChildren: AuthQuizesRouteRouteChildren = {
+  AuthQuizesIndexRoute: AuthQuizesIndexRoute,
+}
+
+const AuthQuizesRouteRouteWithChildren = AuthQuizesRouteRoute._addFileChildren(
+  AuthQuizesRouteRouteChildren,
+)
+
 interface AuthRouteRouteChildren {
   AuthPdfsRouteRoute: typeof AuthPdfsRouteRouteWithChildren
+  AuthQuizesRouteRoute: typeof AuthQuizesRouteRouteWithChildren
 }
 
 const AuthRouteRouteChildren: AuthRouteRouteChildren = {
   AuthPdfsRouteRoute: AuthPdfsRouteRouteWithChildren,
+  AuthQuizesRouteRoute: AuthQuizesRouteRouteWithChildren,
 }
 
 const AuthRouteRouteWithChildren = AuthRouteRoute._addFileChildren(
