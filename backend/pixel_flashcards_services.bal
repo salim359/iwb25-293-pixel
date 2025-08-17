@@ -133,8 +133,7 @@
         }
 
         return {
-            "message": string `${insertedCount}  flashcards generated and stored successfully`,
-            "flashcards": flashcardsArray
+            "message": string `${insertedCount}  flashcards generated and stored successfully`
         };
 
     }

@@ -20,11 +20,11 @@ function Authorization(http:Request req) returns jwt:Payload|UnauthorizedError {
     }
 
     jwt:ValidatorConfig validatorConfig = {
-        issuer: "pixel",
-        audience: "pixelAi-users",
-        clockSkew: 60,
+        issuer: jwtConfig.issuer,
+        audience: jwtConfig.audience,
+        clockSkew: <decimal>jwtConfig.clockSkew,
         signatureConfig: {
-            certFile: "./resources/cert.pem"
+            certFile: jwtConfig.certFile
         }
     };
 

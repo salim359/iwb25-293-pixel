@@ -165,8 +165,7 @@ public function generatequizes(int topicId,http:Request req) returns json|NotFou
         }
 
         return {
-            "message": "Quizzes generated successfully",
-            "quizzes": quizArray
+            "message": "Quizzes generated successfully"
         };
 
     }

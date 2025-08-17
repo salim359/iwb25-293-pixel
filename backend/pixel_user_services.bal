@@ -71,13 +71,13 @@ public function authenticateUser(LoginRequest loginRequest) returns LoginRespons
         return unauthorizederror;
     }
 
-    crypto:PrivateKey privateKey = check crypto:decodeRsaPrivateKeyFromKeyFile("./resources/private.key");
+    crypto:PrivateKey privateKey = check crypto:decodeRsaPrivateKeyFromKeyFile(jwtConfig.privateKeyPath);
 
     jwt:IssuerConfig issuerConfig = {
-        username: "pixel",
-        issuer: "pixel",
-        audience: "pixelAi-users",
-        expTime: 3600 * 24,
+        username: jwtConfig.issuer,
+        issuer: jwtConfig.issuer,
+        audience: jwtConfig.audience,
+        expTime: <decimal>jwtConfig.expTime,
         customClaims: {
             user_id: user.id,
             email: user.email

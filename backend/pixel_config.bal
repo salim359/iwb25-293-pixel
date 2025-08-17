@@ -20,6 +20,15 @@ public type CorsConfig record {|
     int maxAge;
 |};
 
+public type JwtConfig record {|
+    string issuer;
+    string audience;
+    int expTime; // in seconds
+    string privateKeyPath;
+    int clockSkew; // in seconds
+    string certFile;
+|};
+
 public configurable ModelConfig modelConfig = ?;
 public configurable DataBaseConfig databaseConfig = ?;
 public configurable string pdf_extractor_api_key = ?;
@@ -27,3 +36,7 @@ public configurable string pdf_extractor_api_key = ?;
 // Configuration constants
 public configurable int PORT = 8080;
 public configurable CorsConfig corsConfig = ?;
+
+// JWT Configuration
+public configurable JwtConfig jwtConfig = ?;
+
