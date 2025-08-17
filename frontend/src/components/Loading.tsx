@@ -20,7 +20,7 @@ export default function Loading(props: {
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="relative group">
               {/* Character with Enhanced Animation */}
-              <div className="text-4xl transition-transform mt-4 duration-700 ease-in-out group-hover:scale-110 animate-bounce">
+              <div className="text-4xl transition-transform mt-3 duration-700 ease-in-out group-hover:scale-110 animate-bounce">
                 💜
               </div>
 

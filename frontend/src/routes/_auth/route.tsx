@@ -42,7 +42,7 @@ function RouteComponent() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between h-[10vh] max-w-7xl mx-auto px-4">
+      <div className="flex items-center justify-between h-[10vh] mx-auto px-4">
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-3">
             <Link to="/pdfs">
@@ -56,7 +56,6 @@ function RouteComponent() {
                 </div>
               </div>
             </Link>
-            <div></div>
           </div>
         </div>
         <div className="flex items-center space-x-4">
@@ -81,7 +80,7 @@ function RouteComponent() {
           </div>
 
           {/* Logout Button */}
-          <Button variant="destructive" size="sm" onClick={handleLogout}>
+          <Button variant="outline" size="sm" onClick={handleLogout}>
             <LogOut className="w-4 h-4 group-hover:rotate-12 transition-transform duration-200" />
           </Button>
         </div>
