@@ -209,7 +209,7 @@ function RouteComponent() {
               </div>
             </div>
             <div className="flex items-center space-x-3">
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={handleLogout}>
                 <LogOut className="w-4 h-4" />
                 Logout
               </Button>

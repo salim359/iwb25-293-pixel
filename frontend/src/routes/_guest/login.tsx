@@ -119,7 +119,9 @@ function RouteComponent() {
                 </FormItem>
               )}
             />
-            <Button type="submit">Log in</Button>
+            <Button type="submit" disabled={loginMutation.isPending}>
+              Log in
+            </Button>
           </form>
         </Form>
         <div className="flex items-center my-6">
