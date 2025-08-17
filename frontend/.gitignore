@@ -1,0 +1,7 @@
+node_modules
+temp
+package-lock.json
+.tanstack
+.temp
+dist/
+.env
