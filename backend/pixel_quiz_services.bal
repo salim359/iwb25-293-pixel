@@ -13,23 +13,23 @@ public function generatequizes(int topicId, http:Request req) returns json|NotFo
     }
     int? userId = <int?>authResult["user_id"];
     int|sql:Error pdfId = dbClient->queryRow(`SELECT pdf_id from topics where id=${topicId}`);
-    if pdfId is sql:Error{
+    if pdfId is sql:Error {
         NotFoundError notFoundError = {
-            body: {message: "PDF not found",details: "pdf_id not found", timestamp: time:utcNow()}
+            body: {message: "PDF not found", details: "pdf_id not found", timestamp: time:utcNow()}
         };
         return notFoundError;
     }
-     boolean authorizationPdfAccess = AuthorizedPdfAccess(pdfId,userId);
-     
+    boolean authorizationPdfAccess = AuthorizedPdfAccess(pdfId, userId);
+
     if (authorizationPdfAccess is false) {
         UnauthorizedError unauthorizedError = {
-            body: {message: "Unauthorized access",details: "You do not have permission to access this PDF document", timestamp: time:utcNow()}
+            body: {message: "Unauthorized access", details: "You do not have permission to access this PDF document", timestamp: time:utcNow()}
         };
         return unauthorizedError;
     }
-    
-    string|NotFoundError topictext = ExtractedTopic(topicId,pdfId);
-   
+
+    string|NotFoundError topictext = ExtractedTopic(topicId, pdfId);
+
     if topictext is NotFoundError {
         return topictext; // NotFoundError if topic does not exist
     }
@@ -188,8 +188,10 @@ public function generatequizes(int topicId, http:Request req) returns json|NotFo
 
 //get  quizID for a topic
 public function getquizId(int topicId) returns int|NotFoundError {
-    int|sql:Error quizIdResult = dbClient->queryRow(`SELECT id FROM quizzes WHERE topic_id = ${topicId}`);
-    if quizIdResult is sql:Error {
+    stream<record {|int id;|}, sql:Error?> quizIdStream = dbClient->query(`SELECT id FROM quizzes WHERE topic_id = ${topicId}`);
+    record {|int id;|}[]|sql:Error quizIdRows = from var row in quizIdStream
+        select row;
+    if quizIdRows is sql:Error {
         NotFoundError notFoundError = {
             body: {
                 message: "Quiz not found",
@@ -199,23 +201,39 @@ public function getquizId(int topicId) returns int|NotFoundError {
         };
         return notFoundError;
     }
-   return quizIdResult;
+    int latestId = -1;
+    foreach var row in quizIdRows {
+        if row.id > latestId {
+            latestId = row.id;
+        }
+    }
+    if latestId == -1 {
+        NotFoundError notFoundError = {
+            body: {
+                message: "Quiz not found",
+                details: "No quiz exists for the given topic ID",
+                timestamp: time:utcNow()
+            }
+        };
+        return notFoundError;
+    }
+    return latestId;
 }
 
 //for 1 quiz all questions, by using the topicid get the quiz id and from it get all questions related to 1 quiz id(get all questions)
-public function getquizes(int topicId, http:Request req) returns Quiz[]|NotFoundError|UnauthorizedError|error {
+public function getquizes(int topicId, http:Request req) returns json[]|NotFoundError|UnauthorizedError|error {
 
     jwt:Payload|UnauthorizedError authResult = Authorization(req);
     if (authResult is UnauthorizedError) {
         return authResult;
     }
     int userId = <int>authResult["user_id"];
-    
+
     int|NotFoundError quizId = getquizId(topicId);
     if quizId is NotFoundError {
         return quizId;
     }
-    
+
     stream<Quiz, sql:Error?> quizStream =
         dbClient->query(`SELECT * FROM questions WHERE quiz_id=${quizId}`, Quiz);
 
@@ -225,7 +243,7 @@ public function getquizes(int topicId, http:Request req) returns Quiz[]|NotFound
     if quizResult is sql:Error {
         return quizResult;
     }
-   
+
     int|sql:Error pdfId = dbClient->queryRow(`SELECT pdf_id FROM topics WHERE id = ${topicId}`);
     if pdfId is sql:Error {
         NotFoundError notFoundError = {
@@ -241,7 +259,26 @@ public function getquizes(int topicId, http:Request req) returns Quiz[]|NotFound
         return unauthorizedError;
     }
 
-    return quizResult;
+    json[] questions = [];
+    foreach var q in quizResult {
+        json[] opts = [];
+        if q.options is string {
+            json|error arr = (<string>q.options).fromJsonString();
+            if arr is json[] {
+                foreach var opt in <json[]>arr {
+                    opts.push(opt);
+                }
+            }
+        }
+        questions.push({
+            id: q.id,
+            question_type: q.question_type,
+            question: q.question_text,
+            answer: q.correct_answer,
+            options: opts
+        });
+    }
+    return questions;
 
 }
 
@@ -365,25 +402,21 @@ public function adduserprogress(http:Request req) returns json|UnauthorizedError
     };
 }
 
-public function getuserprogressperquizset(int quizId, http:Request req) returns json|NotFoundError|UnauthorizedError|error {
+public function getuserprogressperquizset(int topicId, http:Request req) returns json|NotFoundError|UnauthorizedError|error {
     jwt:Payload|UnauthorizedError authResult = Authorization(req);
     if (authResult is UnauthorizedError) {
         return authResult; // UnauthorizedError (includes expiry, invalid, or missing token)
     }
     int? userId = <int?>authResult["user_id"];
+    int|NotFoundError quizId = getquizId(topicId);
+    io:println(quizId);
+    if quizId is NotFoundError {
+        return quizId; // NotFoundError if quiz does not exist
+    }
+
     UserProgress|error userProgress = dbClient->queryRow(`SELECT * FROM user_progress WHERE user_id = ${userId} AND quiz_id = ${quizId}`, UserProgress);
     if userProgress is error {
-        if userProgress is sql:NoRowsError {
-            NotFoundError userNotFound = {
-                body: {
-                    message: "User progress not found",
-                    details: "No progress exists for the given user ID",
-                    timestamp: time:utcNow()
-                }
-            };
-            return userNotFound;
-        }
-        return userProgress;
+        return {score: 0};
     }
     return {score: userProgress.score};
 }
