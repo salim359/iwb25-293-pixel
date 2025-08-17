@@ -6,34 +6,34 @@ export default function FAQ() {
 
   const faqs = [
     {
-      question: "What is FlashGenius?",
+      question: "What is Pixel AI?",
       answer:
-        "FlashGenius is an AI-powered platform that helps you generate flashcards, practice questions, and exam predictions for any subject in seconds.",
+        "Pixel AI is an advanced platform that instantly generates flashcards, quizzes, and exam predictions for any subject using artificial intelligence.",
     },
     {
-      question: "How do I generate flashcards or questions?",
+      question: "How do I use Pixel AI to create study materials?",
       answer:
-        "Simply enter your topic, notes, or study material, and our AI will instantly create high-quality flashcards and practice questions tailored to your needs.",
+        "Simply upload your PDF and start learning! Pixel AI will automatically generate flashcards, quizzes, and practice questions from your material so you can study smarter and faster.",
     },
     {
-      question: "Is FlashGenius free to use?",
+      question: "Is Pixel AI free to use?",
       answer:
-        "Yes! You can start generating flashcards and questions for free. Premium features may be available for advanced users.",
+        "Yes, Pixel AI is free for now! You can generate flashcards and quizzes without any cost. Premium features may be introduced in the future for advanced users.",
     },
     {
-      question: "How accurate are the exam predictions?",
+      question: "How reliable are the exam predictions from Pixel AI?",
       answer:
-        "Our AI uses advanced algorithms and large datasets to provide exam predictions, but we recommend using them as a study aid, not a guarantee.",
+        "Pixel AI uses state-of-the-art algorithms and large datasets to provide exam predictions. These are designed to guide your study, but should be used as helpful insights, not guarantees.",
     },
     {
-      question: "Can I use FlashGenius for any subject?",
+      question: "Can I use Pixel AI for any subject?",
       answer:
-        "Absolutely! FlashGenius supports a wide range of subjects, from science and math to history and languages.",
+        "Absolutely! Pixel AI supports a wide range of subjects, from science and math to history, languages, and more.",
     },
     {
-      question: "Do I need to create an account?",
+      question: "Do I need to create an account to use Pixel AI?",
       answer:
-        "You can try basic features without an account, but signing up lets you save your flashcards, track progress, and access more tools.",
+        "Yes, you must sign in to access all features of Pixel AI. Signing in lets you generate unlimited flashcards, save your progress, and unlock personalized study tools.",
     },
   ];
 
@@ -48,8 +48,8 @@ export default function FAQ() {
           Frequently Asked Questions
         </h2>
         <p className="text-muted-foreground text-lg lg:text-xl max-w-2xl mx-auto">
-          Everything you need to know about FlashGenius and how it helps you
-          study smarter
+          Everything you need to know about Pixel AI and how it helps you study
+          smarter
         </p>
       </div>
 
@@ -92,7 +92,7 @@ export default function FAQ() {
         <p className="text-muted-foreground text-lg">
           Still have questions?{" "}
           <a
-            href="mailto:support@flashgenius.com"
+            href="mailto:support@pixelai.com"
             className="text-primary hover:text-primary/80 font-semibold underline underline-offset-2"
           >
             Contact our support team
