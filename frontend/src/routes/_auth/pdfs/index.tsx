@@ -1,20 +1,7 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState, useContext } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import {
-  FileText,
-  BookOpen,
-  Brain,
-  PenTool,
-  Eye,
-  Download,
-  Clock,
-  ChevronRight,
-  Sparkles,
-  LogOut,
-} from "lucide-react";
-import { AuthContext } from "@/context/AuthContext";
+import { FileText, BookOpen, Brain, PenTool } from "lucide-react";
 import UploadPdf from "@/components/pdfs/UploadPdf";
 import apiClient from "@/lib/apiClient";
 import { useQuery } from "@tanstack/react-query";
@@ -23,58 +10,7 @@ export const Route = createFileRoute("/_auth/pdfs/")({
   component: RouteComponent,
 });
 
-interface PDF {
-  id: number;
-  filename: string;
-  uploadDate: string;
-  status: "processing" | "ready" | "error";
-  summary?: string;
-  topics?: number;
-  quizzes?: number;
-  flashcards?: number;
-}
-
 function RouteComponent() {
-  const [pdfs, setPdfs] = useState<PDF[]>([
-    {
-      id: 1,
-      filename: "Machine Learning Fundamentals.pdf",
-      uploadDate: "2025-08-15",
-      status: "ready",
-      topics: 8,
-      quizzes: 12,
-      flashcards: 45,
-    },
-    {
-      id: 2,
-      filename: "Data Structures & Algorithms.pdf",
-      uploadDate: "2025-08-14",
-      status: "ready",
-      topics: 15,
-      quizzes: 25,
-      flashcards: 78,
-    },
-    {
-      id: 3,
-      filename: "Python Programming Guide.pdf",
-      uploadDate: "2025-08-13",
-      status: "processing",
-      topics: 0,
-      quizzes: 0,
-      flashcards: 0,
-    },
-  ]);
-
-  // My
-  const navigate = useNavigate();
-  const { logout } = useContext(AuthContext);
-  function handleLogout() {
-    logout();
-    navigate({
-      to: "/",
-    });
-  }
-
   const pdfQuery = useQuery({
     queryKey: ["pdfs"],
     queryFn: async () => {
@@ -85,35 +21,6 @@ function RouteComponent() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="bg-card border-b border-border sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-                  <Sparkles className="w-6 h-6 text-primary-foreground" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-foreground">
-                    Pixel AI
-                  </h1>
-                  <p className="text-sm text-muted-foreground">
-                    Smart Learning Platform
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3">
-              <Button variant="outline" size="sm" onClick={handleLogout}>
-                <LogOut className="w-4 h-4" />
-                Logout
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div className="max-w-7xl mx-auto px-6 py-8">
         <UploadPdf />
 
@@ -206,11 +113,11 @@ function RouteComponent() {
                     </div>
                   </CardContent>
                   <CardFooter className="p-6 pt-0 relative z-10">
-                    <div className="flex gap-3 w-full">
+                    <div className="w-full">
                       <Link
                         to="/quizzes"
                         search={{ pdf_id: pdf.id }}
-                        className="flex-1"
+                        className="block w-full"
                       >
                         <Button
                           variant="outline"
@@ -218,19 +125,6 @@ function RouteComponent() {
                         >
                           <Brain className="w-4 h-4 mr-2" />
                           Quizzes
-                        </Button>
-                      </Link>
-                      <Link
-                        to="/"
-                        search={{ pdf_id: pdf.id }}
-                        className="flex-1"
-                      >
-                        <Button
-                          variant="outline"
-                          className="w-full bg-gradient-to-r from-accent/5 to-accent/10 border-accent/20 hover:bg-accent hover:text-accent-foreground transition-all duration-200 font-medium shadow-sm hover:shadow-md"
-                        >
-                          <BookOpen className="w-4 h-4 mr-2" />
-                          Flashcards
                         </Button>
                       </Link>
                     </div>
