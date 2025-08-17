@@ -17,10 +17,13 @@ import { Route as GuestLoginRouteImport } from './routes/_guest/login'
 import { Route as AuthQuestionsRouteRouteImport } from './routes/_auth/questions/route'
 import { Route as AuthPdfsRouteRouteImport } from './routes/_auth/pdfs/route'
 import { Route as AuthFlashcardsRouteRouteImport } from './routes/_auth/flashcards/route'
+import { Route as AuthExamRouteRouteImport } from './routes/_auth/exam/route'
 import { Route as AuthQuestionsIndexRouteImport } from './routes/_auth/questions/index'
 import { Route as AuthPdfsIndexRouteImport } from './routes/_auth/pdfs/index'
 import { Route as AuthFlashcardsIndexRouteImport } from './routes/_auth/flashcards/index'
+import { Route as AuthExamIndexRouteImport } from './routes/_auth/exam/index'
 import { Route as AuthPdfsShowRouteImport } from './routes/_auth/pdfs/show'
+import { Route as AuthExamExamRouteImport } from './routes/_auth/exam/exam'
 
 const GuestRouteRoute = GuestRouteRouteImport.update({
   id: '/_guest',
@@ -60,6 +63,11 @@ const AuthFlashcardsRouteRoute = AuthFlashcardsRouteRouteImport.update({
   path: '/flashcards',
   getParentRoute: () => AuthRouteRoute,
 } as any)
+const AuthExamRouteRoute = AuthExamRouteRouteImport.update({
+  id: '/exam',
+  path: '/exam',
+  getParentRoute: () => AuthRouteRoute,
+} as any)
 const AuthQuestionsIndexRoute = AuthQuestionsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -75,20 +83,33 @@ const AuthFlashcardsIndexRoute = AuthFlashcardsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthFlashcardsRouteRoute,
 } as any)
+const AuthExamIndexRoute = AuthExamIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthExamRouteRoute,
+} as any)
 const AuthPdfsShowRoute = AuthPdfsShowRouteImport.update({
   id: '/show',
   path: '/show',
   getParentRoute: () => AuthPdfsRouteRoute,
 } as any)
+const AuthExamExamRoute = AuthExamExamRouteImport.update({
+  id: '/exam',
+  path: '/exam',
+  getParentRoute: () => AuthExamRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/exam': typeof AuthExamRouteRouteWithChildren
   '/flashcards': typeof AuthFlashcardsRouteRouteWithChildren
   '/pdfs': typeof AuthPdfsRouteRouteWithChildren
   '/questions': typeof AuthQuestionsRouteRouteWithChildren
   '/login': typeof GuestLoginRoute
   '/signup': typeof GuestSignupRoute
+  '/exam/exam': typeof AuthExamExamRoute
   '/pdfs/show': typeof AuthPdfsShowRoute
+  '/exam/': typeof AuthExamIndexRoute
   '/flashcards/': typeof AuthFlashcardsIndexRoute
   '/pdfs/': typeof AuthPdfsIndexRoute
   '/questions/': typeof AuthQuestionsIndexRoute
@@ -97,7 +118,9 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof GuestLoginRoute
   '/signup': typeof GuestSignupRoute
+  '/exam/exam': typeof AuthExamExamRoute
   '/pdfs/show': typeof AuthPdfsShowRoute
+  '/exam': typeof AuthExamIndexRoute
   '/flashcards': typeof AuthFlashcardsIndexRoute
   '/pdfs': typeof AuthPdfsIndexRoute
   '/questions': typeof AuthQuestionsIndexRoute
@@ -107,12 +130,15 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_auth': typeof AuthRouteRouteWithChildren
   '/_guest': typeof GuestRouteRouteWithChildren
+  '/_auth/exam': typeof AuthExamRouteRouteWithChildren
   '/_auth/flashcards': typeof AuthFlashcardsRouteRouteWithChildren
   '/_auth/pdfs': typeof AuthPdfsRouteRouteWithChildren
   '/_auth/questions': typeof AuthQuestionsRouteRouteWithChildren
   '/_guest/login': typeof GuestLoginRoute
   '/_guest/signup': typeof GuestSignupRoute
+  '/_auth/exam/exam': typeof AuthExamExamRoute
   '/_auth/pdfs/show': typeof AuthPdfsShowRoute
+  '/_auth/exam/': typeof AuthExamIndexRoute
   '/_auth/flashcards/': typeof AuthFlashcardsIndexRoute
   '/_auth/pdfs/': typeof AuthPdfsIndexRoute
   '/_auth/questions/': typeof AuthQuestionsIndexRoute
@@ -121,12 +147,15 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/exam'
     | '/flashcards'
     | '/pdfs'
     | '/questions'
     | '/login'
     | '/signup'
+    | '/exam/exam'
     | '/pdfs/show'
+    | '/exam/'
     | '/flashcards/'
     | '/pdfs/'
     | '/questions/'
@@ -135,7 +164,9 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/signup'
+    | '/exam/exam'
     | '/pdfs/show'
+    | '/exam'
     | '/flashcards'
     | '/pdfs'
     | '/questions'
@@ -144,12 +175,15 @@ export interface FileRouteTypes {
     | '/'
     | '/_auth'
     | '/_guest'
+    | '/_auth/exam'
     | '/_auth/flashcards'
     | '/_auth/pdfs'
     | '/_auth/questions'
     | '/_guest/login'
     | '/_guest/signup'
+    | '/_auth/exam/exam'
     | '/_auth/pdfs/show'
+    | '/_auth/exam/'
     | '/_auth/flashcards/'
     | '/_auth/pdfs/'
     | '/_auth/questions/'
@@ -219,6 +253,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthFlashcardsRouteRouteImport
       parentRoute: typeof AuthRouteRoute
     }
+    '/_auth/exam': {
+      id: '/_auth/exam'
+      path: '/exam'
+      fullPath: '/exam'
+      preLoaderRoute: typeof AuthExamRouteRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
     '/_auth/questions/': {
       id: '/_auth/questions/'
       path: '/'
@@ -240,6 +281,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthFlashcardsIndexRouteImport
       parentRoute: typeof AuthFlashcardsRouteRoute
     }
+    '/_auth/exam/': {
+      id: '/_auth/exam/'
+      path: '/'
+      fullPath: '/exam/'
+      preLoaderRoute: typeof AuthExamIndexRouteImport
+      parentRoute: typeof AuthExamRouteRoute
+    }
     '/_auth/pdfs/show': {
       id: '/_auth/pdfs/show'
       path: '/show'
@@ -247,8 +295,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthPdfsShowRouteImport
       parentRoute: typeof AuthPdfsRouteRoute
     }
+    '/_auth/exam/exam': {
+      id: '/_auth/exam/exam'
+      path: '/exam'
+      fullPath: '/exam/exam'
+      preLoaderRoute: typeof AuthExamExamRouteImport
+      parentRoute: typeof AuthExamRouteRoute
+    }
   }
 }
+
+interface AuthExamRouteRouteChildren {
+  AuthExamExamRoute: typeof AuthExamExamRoute
+  AuthExamIndexRoute: typeof AuthExamIndexRoute
+}
+
+const AuthExamRouteRouteChildren: AuthExamRouteRouteChildren = {
+  AuthExamExamRoute: AuthExamExamRoute,
+  AuthExamIndexRoute: AuthExamIndexRoute,
+}
+
+const AuthExamRouteRouteWithChildren = AuthExamRouteRoute._addFileChildren(
+  AuthExamRouteRouteChildren,
+)
 
 interface AuthFlashcardsRouteRouteChildren {
   AuthFlashcardsIndexRoute: typeof AuthFlashcardsIndexRoute
@@ -287,12 +356,14 @@ const AuthQuestionsRouteRouteWithChildren =
   AuthQuestionsRouteRoute._addFileChildren(AuthQuestionsRouteRouteChildren)
 
 interface AuthRouteRouteChildren {
+  AuthExamRouteRoute: typeof AuthExamRouteRouteWithChildren
   AuthFlashcardsRouteRoute: typeof AuthFlashcardsRouteRouteWithChildren
   AuthPdfsRouteRoute: typeof AuthPdfsRouteRouteWithChildren
   AuthQuestionsRouteRoute: typeof AuthQuestionsRouteRouteWithChildren
 }
 
 const AuthRouteRouteChildren: AuthRouteRouteChildren = {
+  AuthExamRouteRoute: AuthExamRouteRouteWithChildren,
   AuthFlashcardsRouteRoute: AuthFlashcardsRouteRouteWithChildren,
   AuthPdfsRouteRoute: AuthPdfsRouteRouteWithChildren,
   AuthQuestionsRouteRoute: AuthQuestionsRouteRouteWithChildren,

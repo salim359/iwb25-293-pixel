@@ -1,7 +1,6 @@
 import ballerina/http;
 import ballerina/jwt;
 import ballerina/sql;
-import ballerina/time;
 
 public function generateExam(int pdfId, http:Request req) returns json|NotFoundError|UnauthorizedError|error {
 
@@ -42,9 +41,20 @@ public function generateExam(int pdfId, http:Request req) returns json|NotFoundE
         timeout: 90
     });
 
+    // Make the API request
     http:Response aiRes = check openAIClient->post("/chat/completions", openAIReq);
-    if aiRes.statusCode != http:STATUS_OK {
-        return error("OpenAI API request failed with status: " + aiRes.statusCode.toString());
+    
+    // Handle different error status codes
+    if (aiRes.statusCode != http:STATUS_OK) {
+        if (aiRes.statusCode == 429) {
+            return error("OpenAI API rate limit exceeded. Please wait a moment and try again.");
+        } else if (aiRes.statusCode == 401) {
+            return error("OpenAI API authentication failed. Please check your API key.");
+        } else if (aiRes.statusCode == 500) {
+            return error("OpenAI API server error. Please try again later.");
+        } else {
+            return error("OpenAI API request failed with status: " + aiRes.statusCode.toString());
+        }
     }
 
     json|error aiJson = aiRes.getJsonPayload();
@@ -65,9 +75,10 @@ public function generateExam(int pdfId, http:Request req) returns json|NotFoundE
                 json|error exam = checkpanic content.fromJsonString();
                 if exam is json[] {
                     json[] examArray = exam;
-                    _ = check dbClient->execute(
-                                `INSERT INTO exams (user_id, title) VALUES (${userId}, "Generated Exam")`
-                            );
+                    
+                    // Insert exam record with pdf_id
+                    _ = check dbClient->execute(`INSERT INTO exams (user_id, pdf_id, title) VALUES (${userId}, ${pdfId}, "Generated Exam")`);
+                    
                     int examId = check dbClient->queryRow(`SELECT LAST_INSERT_ID()`);
 
                     foreach var item in examArray {
@@ -80,15 +91,10 @@ public function generateExam(int pdfId, http:Request req) returns json|NotFoundE
                         string answer = answerJson is string ? answerJson : "";
                         int sequence = sequenceJson is int ? sequenceJson : 0;
 
-                        // Validate each exam item
-                        if question is string && answer is string && sequence is int {
-                            _ = check dbClient->execute(
-                                `INSERT INTO exam_question (exam_id, question_text, answer_text, sequence) VALUES (
-                                    ${examId}, ${question}, ${answer}, ${sequence})`
-                            );
-                        }
+                        // Insert exam question
+                        _ = check dbClient->execute(`INSERT INTO exam_question (exam_id, question_text, answer_text, sequence) VALUES (${examId}, ${question}, ${answer}, ${sequence})`);
                     }
-                    return <json>{"message": examArray.length().toString() + " exams extracted and stored", "examId": examId};
+                    return <json>{"message": examArray.length().toString() + " exam questions generated and stored", "examId": examId};
                 } else {
                     return error("Extracted exams is not a JSON array");
                 }
@@ -103,7 +109,7 @@ public function generateExam(int pdfId, http:Request req) returns json|NotFoundE
 
 }
 
-public function getExam(int pdfId, http:Request req) returns Exam[]|NotFoundError|UnauthorizedError|error {
+public function getExam(int pdfId, http:Request req) returns Exam[]|UnauthorizedError|error {
     jwt:Payload|UnauthorizedError authResult = Authorization(req);
     if (authResult is UnauthorizedError) {
         return authResult;
@@ -111,14 +117,8 @@ public function getExam(int pdfId, http:Request req) returns Exam[]|NotFoundErro
     int? userId = <int?>authResult["user_id"];
     int|sql:Error examId = dbClient->queryRow(`SELECT id FROM exams WHERE pdf_id = ${pdfId} AND user_id = ${userId}`);
     if examId is sql:Error {
-        NotFoundError notFoundError = {
-            body: {
-                message: "Exam not found",
-                details: "No exam exists with the given PDF ID",
-                timestamp: time:utcNow()
-            }
-        };
-        return notFoundError;
+        // Return empty array instead of NotFoundError when no exam exists
+        return [];
     }
    
 
