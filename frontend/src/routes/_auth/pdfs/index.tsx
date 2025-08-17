@@ -6,25 +6,18 @@ import { Progress } from "@/components/ui/progress";
 import apiClient from "@/lib/apiClient";
 import {
   FileText,
-  Upload,
   BookOpen,
   Brain,
   PenTool,
-  BarChart3,
-  Zap,
-  Plus,
   Eye,
   Download,
   Clock,
-  TrendingUp,
-  Users,
   ChevronRight,
   Sparkles,
-  Target,
-  Award,
   LogOut,
 } from "lucide-react";
 import { AuthContext } from "@/context/AuthContext";
+import UploadPdf from "@/components/pdfs/UploadPdf";
 
 export const Route = createFileRoute("/_auth/pdfs/")({
   component: RouteComponent,
@@ -78,78 +71,6 @@ function RouteComponent() {
       flashcards: 0,
     },
   ]);
-
-  const [stats] = useState<Stats>({
-    totalPDFs: 12,
-    totalTopics: 84,
-    totalQuizzes: 156,
-    completionRate: 73,
-  });
-
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleFileUpload = async () => {
-    const file = fileInputRef.current?.files?.[0];
-    if (!file) return;
-
-    setIsUploading(true);
-    setUploadProgress(0);
-
-    // Simulate upload progress
-    const progressInterval = setInterval(() => {
-      setUploadProgress((prev) => {
-        if (prev >= 90) {
-          clearInterval(progressInterval);
-          return 90;
-        }
-        return prev + 10;
-      });
-    }, 200);
-
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      await apiClient.post("/pixel/pdfs", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
-      setUploadProgress(100);
-
-      // Add new PDF to list
-      const newPdf: PDF = {
-        id: Date.now(),
-        filename: file.name,
-        uploadDate: new Date().toISOString().split("T")[0],
-        status: "processing",
-        topics: 0,
-        quizzes: 0,
-        flashcards: 0,
-      };
-
-      setPdfs((prev) => [newPdf, ...prev]);
-
-      setTimeout(() => {
-        setIsUploading(false);
-        setUploadProgress(0);
-        if (fileInputRef.current) {
-          fileInputRef.current.value = "";
-        }
-      }, 1000);
-    } catch (error) {
-      console.error("Upload failed:", error);
-      setIsUploading(false);
-      setUploadProgress(0);
-    }
-  };
-
-  const triggerFileInput = () => {
-    fileInputRef.current?.click();
-  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -219,61 +140,7 @@ function RouteComponent() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Upload Section */}
-        <Card className="mb-8 bg-muted/50 border-border">
-          <CardContent className="p-8">
-            <div className="text-center">
-              <div className="mb-6">
-                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Upload className="w-8 h-8 text-primary-foreground" />
-                </div>
-                <h3 className="text-2xl font-bold text-foreground mb-2">
-                  Upload Your PDF
-                </h3>
-                <p className="text-muted-foreground max-w-md mx-auto">
-                  Transform your documents into interactive learning materials
-                  with AI-powered summaries, quizzes, and flashcards.
-                </p>
-              </div>
-
-              {isUploading ? (
-                <div className="max-w-md mx-auto">
-                  <div className="mb-4">
-                    <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
-                      <span>Uploading...</span>
-                      <span>{uploadProgress}%</span>
-                    </div>
-                    <Progress value={uploadProgress} className="h-2" />
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Processing your document with AI
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".pdf"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                  />
-                  <Button
-                    onClick={triggerFileInput}
-                    size="lg"
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3"
-                  >
-                    <Upload className="w-5 h-5 mr-2" />
-                    Choose PDF File
-                  </Button>
-                  <p className="text-xs text-slate-500">
-                    Supports PDF files up to 50MB
-                  </p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        <UploadPdf />
 
         {/* PDFs Grid */}
         <div className="mb-8">
@@ -291,30 +158,24 @@ function RouteComponent() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
             {pdfs.map((pdf) => (
-              <Card
-                key={pdf.id}
-                className="hover:shadow-lg transition-all duration-200 group"
-              >
-                <CardContent className="p-6">
+              <Card key={pdf.id}>
+                <CardContent>
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center space-x-3">
                       <div className="w-12 h-12 bg-destructive/10 rounded-lg flex items-center justify-center">
                         <FileText className="w-6 h-6 text-destructive" />
                       </div>
-                      <div className="flex-1 min-w-0">
+
+                      <div className="min-w-0">
                         <h3 className="font-semibold text-foreground truncate group-hover:text-primary transition-colors">
                           {pdf.filename}
                         </h3>
+
                         <p className="text-sm text-muted-foreground flex items-center">
                           <Clock className="w-3 h-3 mr-1" />
                           {pdf.uploadDate}
                         </p>
                       </div>
-                    </div>
-                    <div
-                      className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(pdf.status)}`}
-                    >
-                      {getStatusText(pdf.status)}
                     </div>
                   </div>
 
@@ -349,16 +210,6 @@ function RouteComponent() {
                           </div>
                         </div>
                       </div>
-                    </div>
-                  )}
-
-                  {pdf.status === "processing" && (
-                    <div className="mb-4">
-                      <div className="flex items-center space-x-2 text-sm text-yellow-600 dark:text-yellow-400 mb-2">
-                        <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
-                        <span>AI is analyzing your document...</span>
-                      </div>
-                      <Progress value={65} className="h-1" />
                     </div>
                   )}
 
