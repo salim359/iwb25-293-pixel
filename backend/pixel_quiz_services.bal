@@ -187,10 +187,11 @@ public function generatequizes(int topicId, http:Request req) returns json|NotFo
 }
 
 //get  quizID for a topic
-public function getquizIds(int topicId) returns int[]|NotFoundError {
-    stream<int, sql:Error?> quizIdStream = dbClient->query(`SELECT id FROM quizzes WHERE topic_id = ${topicId}`);
-    int[]|sql:Error quizIdsResult = from var id in quizIdStream select id;
-    if quizIdsResult is sql:Error {
+public function getquizId(int topicId) returns int|NotFoundError {
+    stream<record {|int id;|}, sql:Error?> quizIdStream = dbClient->query(`SELECT id FROM quizzes WHERE topic_id = ${topicId}`);
+    record {|int id;|}[]|sql:Error quizIdRows = from var row in quizIdStream
+        select row;
+    if quizIdRows is sql:Error {
         NotFoundError notFoundError = {
             body: {
                 message: "Quiz not found",
@@ -200,7 +201,23 @@ public function getquizIds(int topicId) returns int[]|NotFoundError {
         };
         return notFoundError;
     }
-    return quizIdsResult;
+    int latestId = -1;
+    foreach var row in quizIdRows {
+        if row.id > latestId {
+            latestId = row.id;
+        }
+    }
+    if latestId == -1 {
+        NotFoundError notFoundError = {
+            body: {
+                message: "Quiz not found",
+                details: "No quiz exists for the given topic ID",
+                timestamp: time:utcNow()
+            }
+        };
+        return notFoundError;
+    }
+    return latestId;
 }
 
 //for 1 quiz all questions, by using the topicid get the quiz id and from it get all questions related to 1 quiz id(get all questions)
@@ -396,10 +413,10 @@ public function getuserprogressperquizset(int topicId, http:Request req) returns
     if quizId is NotFoundError {
         return quizId; // NotFoundError if quiz does not exist
     }
-    
+
     UserProgress|error userProgress = dbClient->queryRow(`SELECT * FROM user_progress WHERE user_id = ${userId} AND quiz_id = ${quizId}`, UserProgress);
     if userProgress is error {
-        return { score :0 };
+        return {score: 0};
     }
     return {score: userProgress.score};
 }
