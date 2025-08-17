@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { Button } from "./ui/button";
 import { Link } from "@tanstack/react-router";
 import logo from "@/assets/logo.svg";
+import { AuthContext } from "@/context/AuthContext";
 
 const navLinks = [
   { name: "Home", href: "#hero" },
@@ -11,6 +12,7 @@ const navLinks = [
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const { isAuthenticated } = useContext(AuthContext);
 
   return (
     <div className="fixed top-3 z-40 px-5 w-full">
@@ -34,14 +36,26 @@ export default function Navbar() {
             ))}
           </div>
           <div className="hidden md:flex gap-2 items-center">
-            <Link to="/login">
-              <Button className="px-4 py-2 font-medium" variant="outline">
-                Login
-              </Button>
-            </Link>
-            <Link to="/signup">
-              <Button className="px-4 py-2 font-medium ml-2">Sign Up</Button>
-            </Link>
+            {isAuthenticated() ? (
+              <>
+                <Link to="/pdfs">
+                  <Button className="px-4 py-2 font-medium">Dashboard</Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button className="px-4 py-2 font-medium" variant="outline">
+                    Login
+                  </Button>
+                </Link>
+                <Link to="/signup">
+                  <Button className="px-4 py-2 font-medium ml-2">
+                    Sign Up
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
           <div className="md:hidden flex items-center">
             <button

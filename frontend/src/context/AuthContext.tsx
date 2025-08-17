@@ -8,12 +8,17 @@ import {
   useEffect,
   useState,
 } from "react";
+import { jwtDecode, JwtPayload as DefaultJwtPayload } from "jwt-decode";
+
+interface JwtPayload extends DefaultJwtPayload {
+  user_id: string;
+  email: string;
+}
 
 export interface User {
   id: string;
   name: string;
   email: string;
-  role: UserRole;
   permissions: string[];
 }
 
@@ -21,19 +26,11 @@ export interface AuthContextType {
   user: User | null;
   setUser: Dispatch<SetStateAction<User | null>>;
   isLoading: boolean;
-  login: (userData: UserResource, role: UserRole) => void;
+  login: (token: string) => void;
   logout: () => void;
   signup: (userData: User) => void;
   isAuthenticated: () => boolean;
 }
-
-const rolePermissions: Record<UserRole, string[]> = {
-  admin: ["profiles:*"],
-  candidate: [""],
-  recruiter: ["profiles:*"],
-  superAdmin: ["users:*"],
-  acc_manager: ["companies:*"],
-};
 
 export const initialAuthContext: AuthContextType = {
   user: null,
@@ -51,15 +48,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  function login(userData: UserResource, role: UserRole) {
-    const user: User = {
-      id: userData.id,
-      name: userData.attributes.name,
-      email: userData.attributes.email,
-      role: role,
-      permissions: rolePermissions[role] || [],
-    };
-    setUser(user);
+  function login(token: string) {
+    const decoded = jwtDecode<JwtPayload>(token);
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(decoded));
+    setUser({
+      id: decoded.user_id,
+      name: "",
+      email: decoded.email,
+      permissions: ["pdfs:*"],
+    });
   }
 
   function signup(userData: User) {
@@ -76,25 +74,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     (async () => {
-      let user: UserResource;
       try {
-        user = await profileApi.getProfie();
-        // TODO: Remove this delay in production
-        await new Promise((resolve) => setTimeout(resolve, 200)); // Simulate loading delay
-        setUser({
-          id: user.id,
-          name: user.attributes.name,
-          email: user.attributes.email,
-          role: user.attributes.role,
-          permissions: rolePermissions[user.attributes.role] || [],
-        });
-      } catch (error: any) {
-        if (error.status === 401) {
+        const user = localStorage.getItem("user");
+        if (!user) {
           setUser(null);
           setIsLoading(false);
           return;
         }
-        console.error("Failed to fetch user profile:", error);
+        const userParsed = JSON.parse(user);
+        setUser({
+          id: userParsed.user_id,
+          name: "",
+          email: userParsed.email,
+          permissions: ["pdfs:*"],
+        });
+
+        console.log("user from local storage", userParsed);
+      } catch (error: any) {
+        setUser(null);
+        setIsLoading(false);
+        console.error("Failed to fetch user from local storage", error);
+        return;
       }
 
       setIsLoading(false);
@@ -106,15 +106,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       <div className="flex flex-col items-center justify-center h-screen">
         <Loading />
 
-              {/* Loading Text */}
-      <div className="mt-6 text-center">
-        <h3 className="text-lg font-semibold text-yellow-700 animate-pulse">
-          Getting things ready...
-        </h3>
-        <p className="text-sm text-yellow-600 mt-2">
-          Our busy bee is preparing your workspace! 🍯
-        </p>
-      </div>
+        {/* Loading Text */}
+        <div className="mt-6 text-center">
+          <h3 className="text-lg font-semibold text-yellow-700 animate-pulse">
+            Getting things ready...
+          </h3>
+          <p className="text-sm text-yellow-600 mt-2">
+            Our busy bee is preparing your workspace! 🍯
+          </p>
+        </div>
       </div>
     );
   }

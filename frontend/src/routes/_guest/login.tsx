@@ -1,13 +1,8 @@
-import {
-  createFileRoute,
-  Link,
-  useLocation,
-  useNavigate,
-} from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import logo from "../assets/logo.svg";
-import { useState } from "react";
+
 import { ArrowLeft } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import z from "zod";
@@ -16,7 +11,6 @@ import { useForm } from "react-hook-form";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -24,40 +18,40 @@ import {
 } from "@/components/ui/form";
 import apiClient from "@/lib/apiClient";
 import { toast } from "sonner";
+import { useContext } from "react";
+import { AuthContext } from "@/context/AuthContext";
 
-export const Route = createFileRoute("/signup")({
+export const Route = createFileRoute("/_guest/login")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
   const navigate = useNavigate();
+  const { login } = useContext(AuthContext);
 
-  const signupMutation = useMutation({
+  const loginMutation = useMutation({
     mutationFn: async (data: z.infer<typeof formSchema>) => {
-      const response = await apiClient.post("/pixel/signup", data);
-      return response.data;
+      const response = await apiClient.post("/pixel/login", data);
+      console.log(response.data.token);
+      login(response.data.token);
     },
+
     onError: (error) => {
-      console.error("Signup error", error);
-      toast.error("Failed to create account. Please try again.");
+      console.error("Login error", error);
+      toast.error("Failed to log in. Please check your credentials.");
     },
+
     onSuccess: () => {
-      toast.success("Account created successfully! Redirecting to login...");
-      navigate({
-        to: "/login",
-      });
+      toast.success("Logged in successfully! Redirecting...");
+      navigate({ to: "/" });
     },
   });
 
   function onSubmit(data: z.infer<typeof formSchema>) {
-    signupMutation.mutate(data);
+    loginMutation.mutate(data);
   }
 
   const formSchema = z.object({
-    username: z
-      .string()
-      .min(1, "Username is required")
-      .max(50, "Username must be at most 50 characters"),
     email: z.email(),
     password: z
       .string()
@@ -68,7 +62,6 @@ function RouteComponent() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      username: "",
       email: "",
       password: "",
     },
@@ -89,10 +82,10 @@ function RouteComponent() {
         </div>
         <div className="mb-8 text-center">
           <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-            Create your account
+            Log in to your account
           </h1>
           <p className="text-muted-foreground text-base">
-            Sign up to get started. It's fast and easy.
+            Welcome back! Please enter your credentials.
           </p>
         </div>
         <Form {...form}>
@@ -100,19 +93,6 @@ function RouteComponent() {
             onSubmit={form.handleSubmit(onSubmit)}
             className="flex flex-col gap-4"
           >
-            <FormField
-              control={form.control}
-              name="username"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Username</FormLabel>
-                  <FormControl>
-                    <Input placeholder="john_doe" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
             <FormField
               control={form.control}
               name="email"
@@ -126,7 +106,6 @@ function RouteComponent() {
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="password"
@@ -140,8 +119,7 @@ function RouteComponent() {
                 </FormItem>
               )}
             />
-
-            <Button type="submit">Sign up</Button>
+            <Button type="submit">Log in</Button>
           </form>
         </Form>
         <div className="flex items-center my-6">
@@ -152,12 +130,14 @@ function RouteComponent() {
           <div className="flex-grow border-t border-border" />
         </div>
         <div className="text-center text-sm text-muted-foreground">
-          Already have an account?{" "}
-          <a href="/login" className="text-primary hover:underline font-medium">
-            Log in
+          Don&apos;t have an account?{" "}
+          <a
+            href="/signup"
+            className="text-primary hover:underline font-medium"
+          >
+            Sign up
           </a>
         </div>
-        {/* No decorative gradients */}
       </div>
     </div>
   );
