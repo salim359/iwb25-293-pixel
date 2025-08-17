@@ -94,7 +94,7 @@ function AuthorizedPdfAccess(int pdf_id, int? user_id) returns boolean {
         "Question: " + question +
         "\nCorrect Answer: " + answer +
         "\nUser's Answer: " + userAnswer +
-        "\nDoes the user's answer express the same main idea as the correct answer? Respond with 'yes' or 'no'.";
+        "\nDoes the user's answer express the same main idea as the correct answer? Respond only with 'yes' or 'no'.";
 
     json openAIReq = {
         "model": modelConfig.model,
