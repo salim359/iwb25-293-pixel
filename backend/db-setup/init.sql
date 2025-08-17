@@ -62,9 +62,11 @@ CREATE TABLE flashcards (
 CREATE TABLE exams (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
+    pdf_id INT,
     title VARCHAR(255) NOT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (pdf_id) REFERENCES pdf_documents(id)
 );
 
 CREATE TABLE exam_question (

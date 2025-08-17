@@ -210,6 +210,7 @@ public function getquizes(int topicId, http:Request req) returns Quiz[]|NotFound
         return authResult;
     }
     int userId = <int>authResult["user_id"];
+    
     int|NotFoundError quizId = getquizId(topicId);
     if quizId is NotFoundError {
         return quizId;
@@ -224,13 +225,7 @@ public function getquizes(int topicId, http:Request req) returns Quiz[]|NotFound
     if quizResult is sql:Error {
         return quizResult;
     }
-    // int|sql:Error topicId = dbClient->queryRow(`SELECT topic_id FROM quizzes WHERE id = ${quizId}`);
-    // if topicId is sql:Error {
-    //     NotFoundError notFoundError = {
-    //         body: {message: "Topic not found", details: "No topic exists with the given ID", timestamp: time:utcNow()}
-    //     };
-    //     return notFoundError;
-    // }
+   
     int|sql:Error pdfId = dbClient->queryRow(`SELECT pdf_id FROM topics WHERE id = ${topicId}`);
     if pdfId is sql:Error {
         NotFoundError notFoundError = {

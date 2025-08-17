@@ -103,24 +103,24 @@ public function generateExam(int pdfId, http:Request req) returns json|NotFoundE
 
 }
 
-public function getExam(int examId, http:Request req) returns Exam[]|NotFoundError|UnauthorizedError|error {
+public function getExam(int pdfId, http:Request req) returns Exam[]|NotFoundError|UnauthorizedError|error {
     jwt:Payload|UnauthorizedError authResult = Authorization(req);
     if (authResult is UnauthorizedError) {
         return authResult;
     }
     int? userId = <int?>authResult["user_id"];
-
-    int|sql:Error validExamId = check dbClient->queryRow(`SELECT id FROM exams WHERE id = ${examId} AND user_id = ${userId}`);
-    if validExamId is sql:Error {
-        UnauthorizedError unauthorizedError = {
+    int|sql:Error examId = dbClient->queryRow(`SELECT id FROM exams WHERE pdf_id = ${pdfId} AND user_id = ${userId}`);
+    if examId is sql:Error {
+        NotFoundError notFoundError = {
             body: {
-                message: "Unauthorized access",
-                details: "You do not have permission to access this exam",
+                message: "Exam not found",
+                details: "No exam exists with the given PDF ID",
                 timestamp: time:utcNow()
             }
         };
-        return unauthorizedError;
+        return notFoundError;
     }
+   
 
     stream<Exam, sql:Error?> examStream = dbClient->query(`SELECT * FROM exam_question WHERE exam_id = ${examId} ORDER BY sequence ASC`, Exam);
     Exam[]|sql:Error examResult = from var exam in examStream

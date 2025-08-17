@@ -68,10 +68,7 @@ service /pixel on pixelListener {
     resource function post topics/[int topicId]/quizzes(http:Request req) returns json|NotFoundError|UnauthorizedError|error? {
         return generatequizes(topicId, req);
     }
-    // Retrieve quiz IDs for a topic
-    // resource function get topics/[int topicId]/quizzes() returns json|NotFoundError {
-    //     return getquizId(topicId);
-    // }
+
 
     // Retrieve all quizzes for a quiz set
     resource function get topics/[int topicId]/quizzes(http:Request req) returns Quiz[]|UnauthorizedError|NotFoundError|error {
@@ -119,8 +116,8 @@ service /pixel on pixelListener {
     }
 
     // Retrieve exam questions
-    resource function get exams/[int examId](http:Request req) returns Exam[]|NotFoundError|UnauthorizedError|error {
-        return getExam(examId, req);
+    resource function get pdfs/[int pdfId]/examquestions(http:Request req) returns Exam[]|NotFoundError|UnauthorizedError|error {
+        return getExam(pdfId, req);
     }
     
 
