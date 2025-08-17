@@ -93,7 +93,7 @@ import ballerina/time;
 
     }
 
-    //get all the topics with pdf id
+    //get all the topics with pdf id(fix)
     public function getallTopics(int id,http:Request req) returns json[]|UnauthorizedError|error {
         jwt:Payload|UnauthorizedError authResult = Authorization(req);
         if (authResult is UnauthorizedError) {

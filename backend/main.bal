@@ -74,13 +74,13 @@ service /pixel on pixelListener {
     }
 
     // Retrieve all quizzes for a quiz set
-    resource function get quizzes/[int quizId]() returns Quiz[]|error {
-        return getquizes(quizId);
+    resource function get quizzes/[int quizId](http:Request req) returns Quiz[]|UnauthorizedError|NotFoundError|error {
+        return getquizes(quizId, req);
     }
     
     // Retrieve a specific quiz question
-    resource function get questions/[int questionId]() returns Quiz|NotFoundError|error {
-        return getquiz(questionId);
+    resource function get questions/[int questionId](http:Request req) returns Quiz|NotFoundError|UnauthorizedError|error {
+        return getquiz(questionId, req);
     }
     // Generate flashcards for a topic
     resource function post topics/[int topicId]/flashcards(http:Request req) returns json|NotFoundError|UnauthorizedError|error? {

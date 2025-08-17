@@ -62,9 +62,9 @@ function ExtractedText(int? userId, int pdfId) returns UnauthorizedError|string 
     return pdfTextResult;
 }
 
-function ExtractedTopic(int topicId) returns NotFoundError|string {
+function ExtractedTopic(int topicId,int pdfId) returns NotFoundError|string {
 
-    Topic|sql:Error topicExists = dbClient->queryRow(`SELECT * FROM topics WHERE id = ${topicId}`);
+    Topic|sql:Error topicExists = dbClient->queryRow(`SELECT * FROM topics WHERE id = ${topicId} AND pdf_id = ${pdfId}`);
     if topicExists is sql:Error {
         NotFoundError notFoundError = {
             body: {
@@ -80,22 +80,14 @@ function ExtractedTopic(int topicId) returns NotFoundError|string {
 
 }
 
-// function IscorrectAnswer(int questionId, string userAnswer) returns int {
-//     Quiz|sql:Error quizResult = dbClient->queryRow(`SELECT * FROM questions WHERE id = ${questionId}`);
-//     if quizResult is Quiz {
-//         string correctAnswer = quizResult.correct_answer;
-//         // Check if the user's answer matches the correct answer
-//         if correctAnswer == userAnswer {
-//             return 10;
-//         } else {
-//             return 0;
-//         }
-//     } else {
-//         // If there was an error fetching the quiz, return 0 or handle as needed
-//         return 0;
-//     }
-// }
-
+function AuthorizedPdfAccess(int pdf_id, int? user_id) returns boolean {
+    // Check if the user has access to the PDF document
+    int|sql:Error pdfAccessResult = dbClient->queryRow(`SELECT id FROM pdf_documents WHERE id = ${pdf_id} AND user_id = ${user_id}`);
+    if pdfAccessResult is sql:Error {
+        return false;
+    }
+    return true;
+}
 
 function evaluateAnswer(string question, string answer, string userAnswer) returns json|error {
     string prompt = "Evaluate the following question and answer:\n" +
@@ -103,7 +95,7 @@ function evaluateAnswer(string question, string answer, string userAnswer) retur
         "\nCorrect Answer: " + answer +
         "\nUser's Answer: " + userAnswer +
         "\nDoes the user's answer express the same main idea as the correct answer? Respond with 'yes' or 'no'.";
-        
+
     json openAIReq = {
         "model": modelConfig.model,
         "messages": [
@@ -113,8 +105,8 @@ function evaluateAnswer(string question, string answer, string userAnswer) retur
         "max_tokens": 1500,
         "temperature": 0.3
     };
-    
-     final http:Client openAIClient = check new ("https://api.openai.com/v1", {
+
+    final http:Client openAIClient = check new ("https://api.openai.com/v1", {
         auth: {token: modelConfig.openAiToken},
         timeout: 90
     });
