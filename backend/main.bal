@@ -37,6 +37,11 @@ service /pixel on pixelListener {
     resource function post pdfs(http:Request req) returns json|UnauthorizedError|error? {
         return pdfUpload(req);
     }
+    
+    //get all pdfs
+    resource function get pdfs(http:Request req) returns json|UnauthorizedError|error {
+        return getAllPdfs(req);
+    }
       // Generate a summary for a PDF
     resource function post pdfs/[int id]/summaries(http:Request req) returns json|NotFoundError|UnauthorizedError|error? {
         return generateSummary(id, req);
