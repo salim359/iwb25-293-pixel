@@ -223,7 +223,7 @@ public function generatequizes(int topicId,http:Request req) returns json|NotFou
 
     //per topic
 // after getting 1 question call this with the selected option
-public function adduserprogress(int quizId, http:Request req) returns json|UnauthorizedError|NotFoundError|error {
+public function adduserprogress(http:Request req) returns json|UnauthorizedError|NotFoundError|error {
     jwt:Payload|UnauthorizedError authResult = Authorization(req);
     if (authResult is UnauthorizedError) {
         return authResult;
@@ -240,13 +240,37 @@ public function adduserprogress(int quizId, http:Request req) returns json|Unaut
         return error("Invalid payload structure");
     }
     int questionId = payload.questionId;
-    string answer = payload.answer;
-
-    // Calculate score for this answer
-    int score = IscorrectAnswer(questionId, answer);
-
+    string userAnswer = payload.answer;
+    // get the question
+    Quiz|sql:Error Result = dbClient->queryRow(`SELECT * FROM questions WHERE id = ${questionId}`, Quiz);
+    if Result is sql:Error {
+        NotFoundError notFoundError = {
+            body: {
+                message: "Question not found",
+                details: "No question exists with the given ID",
+                timestamp: time:utcNow()
+            }
+        };
+        return notFoundError;
+    }
+    string question = (<Quiz>Result).question_text;
+    string answer = (<Quiz>Result).correct_answer;
+    int quizId = (<Quiz>Result).quiz_id;
+    
+    // evaluate the answer
+    json |error evaluationResult = evaluateAnswer(question,answer, userAnswer);
+    if evaluationResult is error {
+        return evaluationResult;
+    }
+    int score = 0;
+    
+    if evaluationResult == "yes" {
+        score = 10;
+    }
+    else {
+        score = 0;
+    }
     // Check if a progress record exists
-       // Check if a progress record exists
     record {| int count; |}|error countResult = dbClient->queryRow(
         `SELECT COUNT(*) as count FROM user_progress WHERE user_id = ${userId} AND quiz_id = ${quizId}`);
     if countResult is error {

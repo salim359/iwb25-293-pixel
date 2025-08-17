@@ -2,6 +2,7 @@ import ballerina/http;
 import ballerina/jwt;
 import ballerina/sql;
 import ballerina/time;
+
 function Authorization(http:Request req) returns jwt:Payload|UnauthorizedError {
     string jwt = "";
     var jwtHeader = req.getHeader("Authorization");
@@ -79,18 +80,67 @@ function ExtractedTopic(int topicId) returns NotFoundError|string {
 
 }
 
-function IscorrectAnswer(int questionId, string userAnswer) returns int {
-    Quiz|sql:Error quizResult = dbClient->queryRow(`SELECT * FROM questions WHERE id = ${questionId}`);
-    if quizResult is Quiz {
-        string correctAnswer = quizResult.correct_answer;
-        // Check if the user's answer matches the correct answer
-        if correctAnswer == userAnswer {
-            return 10;
-        } else {
-            return 0;
-        }
-    } else {
-        // If there was an error fetching the quiz, return 0 or handle as needed
-        return 0;
+// function IscorrectAnswer(int questionId, string userAnswer) returns int {
+//     Quiz|sql:Error quizResult = dbClient->queryRow(`SELECT * FROM questions WHERE id = ${questionId}`);
+//     if quizResult is Quiz {
+//         string correctAnswer = quizResult.correct_answer;
+//         // Check if the user's answer matches the correct answer
+//         if correctAnswer == userAnswer {
+//             return 10;
+//         } else {
+//             return 0;
+//         }
+//     } else {
+//         // If there was an error fetching the quiz, return 0 or handle as needed
+//         return 0;
+//     }
+// }
+
+
+function evaluateAnswer(string question, string answer, string userAnswer) returns json|error {
+    string prompt = "Evaluate the following question and answer:\n" +
+        "Question: " + question +
+        "\nCorrect Answer: " + answer +
+        "\nUser's Answer: " + userAnswer +
+        "\nDoes the user's answer express the same main idea as the correct answer? Respond with 'yes' or 'no'.";
+        
+    json openAIReq = {
+        "model": modelConfig.model,
+        "messages": [
+            {"role": "system", "content": "You are an AI that evaluates if a user's answer expresses the same main idea as the correct answer. Respond only with 'yes' or 'no'."},
+            {"role": "user", "content": prompt}
+        ],
+        "max_tokens": 1500,
+        "temperature": 0.3
+    };
+    
+     final http:Client openAIClient = check new ("https://api.openai.com/v1", {
+        auth: {token: modelConfig.openAiToken},
+        timeout: 90
+    });
+
+    http:Response aiRes = check openAIClient->post("/chat/completions", openAIReq);
+    if aiRes.statusCode != http:STATUS_OK {
+        return error("OpenAI API request failed with status: " + aiRes.statusCode.toString());
     }
+
+    json|error aiJson = aiRes.getJsonPayload();
+    if aiJson is error {
+        return error("Failed to parse OpenAI response: " + aiJson.message());
+    }
+
+    json|error choices = aiJson.choices;
+    if choices is json[] {
+        if choices.length() == 0 {
+            return error("Choices array is empty");
+        }
+
+        json|error firstChoice = choices[0];
+        if firstChoice is json {
+            return firstChoice.message.content;
+        } else {
+            return error("Invalid choice format");
+        }
+    }
+    return error("Failed to extract choices from OpenAI API response");
 }
