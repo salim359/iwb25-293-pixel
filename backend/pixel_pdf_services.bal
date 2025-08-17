@@ -214,11 +214,12 @@ public function getSummary(int id, http:Request req) returns json|NotFoundError|
     }
     int? userId = <int?>authResult["user_id"];
 
-    //validate that userid is the one who uploaded the PDF
-    // Check if PDF exists
-    string|UnauthorizedError pdfTextResult = ExtractedText(userId, id);
-    if pdfTextResult is UnauthorizedError {
-        return pdfTextResult;
+    boolean authorizationPdfAccess = AuthorizedPdfAccess(id,userId);
+    if (authorizationPdfAccess is false) {
+        UnauthorizedError unauthorizedError = {
+            body: {message: "Unauthorized access",details: "You do not have permission to access this PDF document", timestamp: time:utcNow()}
+        };
+        return unauthorizedError;
     }
 
     // Fetch the summary from the database
