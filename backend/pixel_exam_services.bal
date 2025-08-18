@@ -134,16 +134,16 @@ public function getExam(int pdfId, http:Request req) returns Exam[]|Unauthorized
 }
 
 public function evaluateExam(int pdfId, http:Request req) returns json|UnauthorizedError|error {
-    jwt:Payload|UnauthorizedError authResult = Authorization(req);
-    if (authResult is UnauthorizedError) {
-        return authResult;
-    }
-    int? userId = <int?>authResult["user_id"];
-    int|sql:Error examId = dbClient->queryRow(`SELECT id FROM exams WHERE pdf_id = ${pdfId} AND user_id = ${userId}`);
-    if examId is sql:Error {
-        // Return empty array instead of NotFoundError when no exam exists
-        return [];
-    }
+    // jwt:Payload|UnauthorizedError authResult = Authorization(req);
+    // if (authResult is UnauthorizedError) {
+    //     return authResult;
+    // }
+    // int? userId = <int?>authResult["user_id"];
+    // int|sql:Error examId = dbClient->queryRow(`SELECT id FROM exams WHERE pdf_id = ${pdfId} AND user_id = ${userId}`);
+    // if examId is sql:Error {
+    //     // Return empty array instead of NotFoundError when no exam exists
+    //     return [];
+    // }
 
     // Get the user's answers for the exam
        // Parse answer from request body
@@ -175,5 +175,9 @@ public function evaluateExam(int pdfId, http:Request req) returns json|Unauthori
     if evaluationResult is error {
         return error("Failed to evaluate exam: " + evaluationResult.message());
     }
-    return evaluationResult;
+    if evaluationResult == "yes" {
+        return {"result": "correct"};
+    } else {
+        return {"result": "incorrect"};
+    }
 }
