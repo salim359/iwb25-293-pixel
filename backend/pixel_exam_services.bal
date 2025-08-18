@@ -133,3 +133,47 @@ public function getExam(int pdfId, http:Request req) returns Exam[]|Unauthorized
 
 }
 
+public function evaluateExam(int pdfId, http:Request req) returns json|UnauthorizedError|error {
+    jwt:Payload|UnauthorizedError authResult = Authorization(req);
+    if (authResult is UnauthorizedError) {
+        return authResult;
+    }
+    int? userId = <int?>authResult["user_id"];
+    int|sql:Error examId = dbClient->queryRow(`SELECT id FROM exams WHERE pdf_id = ${pdfId} AND user_id = ${userId}`);
+    if examId is sql:Error {
+        // Return empty array instead of NotFoundError when no exam exists
+        return [];
+    }
+
+    // Get the user's answers for the exam
+       // Parse answer from request body
+    json|error body = req.getJsonPayload();
+    if body is error {
+        return error("Invalid request body");
+    }
+    AnswerPayload|error payload = body.fromJsonWithType(AnswerPayload);
+    if payload is error {
+        return error("Invalid payload structure");
+    }
+    int questionId = payload.questionId;
+    string userAnswer = payload.answer;
+
+    // Evaluate the exam
+    string|sql:Error correctAnswers = dbClient->queryRow(`SELECT answer_text FROM exam_question WHERE id = ${questionId}`);
+    if correctAnswers is error {
+        return error("Failed to retrieve correct answers");
+    }
+    string|sql:Error questionResult = dbClient->queryRow(`SELECT question_text FROM exam_question WHERE id = ${questionId}`);
+    if questionResult is error {
+        return error("Failed to retrieve question text");
+    }
+    string correctAnswer = correctAnswers is string ? correctAnswers : "";
+    string question = questionResult is string ? questionResult : "";
+
+    // evaluate the answer
+    json|error evaluationResult = evaluateAnswer(question, correctAnswer, userAnswer);
+    if evaluationResult is error {
+        return error("Failed to evaluate exam: " + evaluationResult.message());
+    }
+    return evaluationResult;
+}

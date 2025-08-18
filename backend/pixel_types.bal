@@ -58,6 +58,8 @@ public type Quiz record {|
     string question_type;
     string options;
     string correct_answer;
+    string user_answer?;
+    boolean is_user_answer_correct?;
     string created_at = time:utcNow().toString();
 |};
 

@@ -22,7 +22,7 @@ export default function Question(props: {
   setScore: Dispatch<SetStateAction<number | null>>;
   setNumberOfQuestionsAnswered: Dispatch<SetStateAction<number>>;
 }) {
-  const [answer, setAnswer] = useState("");
+  const [answer, setAnswer] = useState(props.question?.user_answer || "");
   const [answered, setAnswered] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [suggestedAnswer, setSuggestedAnswer] = useState("");
@@ -36,7 +36,7 @@ export default function Question(props: {
         answer,
       });
 
-      const response = await apiClient.post(`/pixel/quizzes/progress`, {
+      const response = await apiClient.post(`/pixel/quizzes/answer`, {
         questionId: props.question?.id,
         answer,
       });
@@ -51,7 +51,7 @@ export default function Question(props: {
     onSuccess: (data: any) => {
       console.log(data);
 
-      if (data.status === "Correct") {
+      if (data.status === true) {
         setIsCorrect(true);
         props.setScore((prevScore) => (prevScore || 0) + 1);
       } else {
@@ -59,9 +59,12 @@ export default function Question(props: {
       }
 
       toast.success("Answer submitted successfully");
-      setAnswered(true);
-      props.setNumberOfQuestionsAnswered((prev) => prev + 1);
-      setSuggestedAnswer(data.answer || "");
+      if(data.user_answer != null){
+        setAnswered(true);
+      }
+     
+      // props.setNumberOfQuestionsAnswered((prev) => prev + 1);
+      setSuggestedAnswer(data.correct_answer || "");
     },
   });
 
@@ -75,23 +78,26 @@ export default function Question(props: {
       <CardContent>
         <div>
           {props.question?.question_type === "MCQ" ? (
-            <RadioGroup
-              disabled={answered}
-              value={answer}
-              onValueChange={setAnswer}
-            >
-              {props.question?.options?.map((option: any, index: number) => (
-                <div className="flex items-center space-x-2" key={index}>
-                  <RadioGroupItem
-                    value={option}
-                    id={`${props.question.id}-option-${index}`}
-                  />
-                  <Label htmlFor={`${props.question.id}-option-${index}`}>
-                    {option}
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
+            <>
+              <RadioGroup
+                disabled={answered}
+                value={answer}
+                onValueChange={setAnswer}
+              >
+                {props.question?.options?.map((option: any, index: number) => (
+                  <div className="flex items-center space-x-2" key={index}>
+                    <RadioGroupItem
+                      value={option}
+                      id={`${props.question.id}-option-${index}`}
+                    />
+                    <Label htmlFor={`${props.question.id}-option-${index}`}>
+                      {option}
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+              
+            </>
           ) : (
             <div>
               <Textarea

@@ -275,7 +275,9 @@ public function getquizes(int topicId, http:Request req) returns json[]|NotFound
             question_type: q.question_type,
             question: q.question_text,
             answer: q.correct_answer,
-            options: opts
+            options: opts,
+            user_answer: q.user_answer,
+            is_user_answer_correct: q.is_user_answer_correct
         });
     }
     return questions;
@@ -371,16 +373,16 @@ public function adduserprogress(http:Request req) returns json|UnauthorizedError
         return evaluationResult;
     }
     int score = 0;
-    string answerResult = "";
-    
+    boolean answerResult = false;
+
     if evaluationResult == "yes" {
         score = 10;
-        answerResult = "Correct";
-        
+        answerResult = true;
+
     }
     else {
         score = 0;
-        answerResult = "Incorrect";
+        answerResult = false;
     }
     // Check if a progress record exists
     record {|int count;|}|error countResult = dbClient->queryRow(
@@ -400,12 +402,17 @@ public function adduserprogress(http:Request req) returns json|UnauthorizedError
             `INSERT INTO user_progress (user_id, quiz_id, score) VALUES (${userId}, ${quizId}, ${score})`
         );
     }
-        
+
+    _ = check dbClient->execute(
+    `UPDATE questions SET user_answer = ${userAnswer}, is_user_answer_correct = ${answerResult} WHERE id = ${questionId}`
+    );
+
     return {
-        "message":"User progress updated successfully",
-        "status":answerResult,
-        "answer":answer
-        };
+        "message": "User progress updated successfully",
+        "status": answerResult,
+        "correct_answer": answer,
+        "user_answer": userAnswer
+    };
 }
 
 public function getuserprogressperquizset(int topicId, http:Request req) returns json|NotFoundError|UnauthorizedError|error {
@@ -449,6 +456,4 @@ public function getuserprogress(http:Request req) returns json|NotFoundError|Una
     }
     return {score: userProgress.score};
 }
-
-
 

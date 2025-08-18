@@ -48,6 +48,8 @@ CREATE TABLE questions (
     question_type VARCHAR(50) NOT NULL,
     options TEXT,
     correct_answer VARCHAR(255),
+    user_answer TEXT,
+    is_user_answer_correct BOOLEAN,
     FOREIGN KEY (quiz_id) REFERENCES quizzes(id)
 );
 

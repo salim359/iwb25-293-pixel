@@ -105,10 +105,9 @@ export default function ExamComponent({ pdf_id }: ExamComponentProps) {
   const [evaluatingAnswers, setEvaluatingAnswers] = useState<{ [key: number]: boolean }>({});
 
   const evaluateAnswerMutation = useMutation({
-    mutationFn: async ({ question, answer, userAnswer }: { question: string; answer: string; userAnswer: string }) => {
-      const response = await apiClient.post('/pixel/evaluateanswer', {
+    mutationFn: async ({ question, userAnswer }: { question: string; userAnswer: string }) => {
+      const response = await apiClient.post(`/pixel/pdfs/${pdf_id}/evaluatequestion`, {
         question,
-        answer,
         userAnswer
       });
       return response.data;
@@ -142,7 +141,6 @@ export default function ExamComponent({ pdf_id }: ExamComponentProps) {
       setEvaluatingAnswers(prev => ({ ...prev, [questionId]: true }));
       evaluateAnswerMutation.mutate({
         question: questionText,
-        answer: correctAnswer,
         userAnswer: userAnswer
       });
     }
