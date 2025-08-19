@@ -42,7 +42,7 @@ export const initialAuthContext: AuthContextType = {
   isAuthenticated: () => false,
 };
 
-const permissions = ["pdfs:*", "quizzes:*", "flashcards:*"];
+const permissions = ["pdfs:*", "quizzes:*", "flashcards:*", "exams:*"];
 
 export const AuthContext = createContext<AuthContextType>(initialAuthContext);
 

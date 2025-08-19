@@ -7,25 +7,23 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Dispatch, SetStateAction, useState } from "react";
+import { useState } from "react";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import apiClient from "@/lib/apiClient";
 import { toast } from "sonner";
-import { set } from "zod";
-import { Check, CheckCircle, CircleOff } from "lucide-react";
+import { CheckCircle, CircleOff } from "lucide-react";
 
 export default function Question(props: {
   question: any;
   topic_id: number;
-  setScore: Dispatch<SetStateAction<number | null>>;
-  setNumberOfQuestionsAnswered: Dispatch<SetStateAction<number>>;
 }) {
+  const [isDirty, setIsDirty] = useState(!!props.question?.user_answer);
   const [answer, setAnswer] = useState(props.question?.user_answer || "");
-  const [answered, setAnswered] = useState(false);
-  const [isCorrect, setIsCorrect] = useState(false);
-  const [suggestedAnswer, setSuggestedAnswer] = useState("");
+
+
+  const isCorrect = !!props.question?.is_user_answer_correct;
 
   const queryClient = useQueryClient();
 
@@ -50,21 +48,8 @@ export default function Question(props: {
 
     onSuccess: (data: any) => {
       console.log(data);
-
-      if (data.status === true) {
-        setIsCorrect(true);
-        props.setScore((prevScore) => (prevScore || 0) + 1);
-      } else {
-        setIsCorrect(false);
-      }
-
-      toast.success("Answer submitted successfully");
-      if(data.user_answer != null){
-        setAnswered(true);
-      }
-     
-      // props.setNumberOfQuestionsAnswered((prev) => prev + 1);
-      setSuggestedAnswer(data.correct_answer || "");
+      queryClient.invalidateQueries({ queryKey: ["questions", props.topic_id] });
+      setIsDirty(true);
     },
   });
 
@@ -80,7 +65,7 @@ export default function Question(props: {
           {props.question?.question_type === "MCQ" ? (
             <>
               <RadioGroup
-                disabled={answered}
+                disabled={isDirty}
                 value={answer}
                 onValueChange={setAnswer}
               >
@@ -96,12 +81,11 @@ export default function Question(props: {
                   </div>
                 ))}
               </RadioGroup>
-              
             </>
           ) : (
             <div>
               <Textarea
-                disabled={answered}
+                disabled={isDirty}
                 value={answer}
                 onChange={(e) => setAnswer(e.target.value)}
                 placeholder="Write your answer here..."
@@ -115,23 +99,23 @@ export default function Question(props: {
         <div className="flex items-center gap-4">
           <Button
             onClick={() => answerMutation.mutate()}
-            disabled={answerMutation.isPending || answered}
+            disabled={answerMutation.isPending || isDirty}
           >
             Submit Answer
           </Button>
           {
             <div>
-              {suggestedAnswer && (
+              {props.question?.answer && isDirty && (
                 <p className="text-sm text-muted-foreground">
-                  {suggestedAnswer}
+                  {props.question?.answer}
                 </p>
               )}
             </div>
           }
         </div>
         <div>
-          {isCorrect && answered && <CheckCircle className="text-green-500" />}
-          {!isCorrect && answered && <CircleOff className="text-red-500" />}
+          {isCorrect && isDirty && <CheckCircle className="text-green-500" />}
+          {!isCorrect && isDirty && <CircleOff className="text-red-500" />}
         </div>
       </CardFooter>
     </Card>

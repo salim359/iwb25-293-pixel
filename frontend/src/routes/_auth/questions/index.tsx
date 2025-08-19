@@ -6,7 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import apiClient from "@/lib/apiClient";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { BookOpen } from "lucide-react";
+import { BookOpen, Loader2Icon } from "lucide-react";
 import { useState } from "react";
 import z from "zod";
 
@@ -23,12 +23,9 @@ function RouteComponent() {
   const { topic_id } = Route.useSearch();
   const { history } = useRouter();
   const queryClient = useQueryClient();
-  const [score, setScore] = useState<number | null>(null);
-  const [numberOfQuestionsAnswered, setNumberOfQuestionsAnswered] =
-    useState<number>(0);
 
   const questionsQuery = useQuery({
-    queryKey: ["questions", { topic_id }],
+    queryKey: ["questions", topic_id],
     queryFn: async () => {
       const response = await apiClient.get(`pixel/topics/${topic_id}/quizzes`);
       console.log(response.data);
@@ -92,6 +89,9 @@ function RouteComponent() {
                 onClick={() => generateQuestionsMutation.mutate()}
                 disabled={generateQuestionsMutation.isPending}
               >
+                {generateQuestionsMutation.isPending && (
+                  <Loader2Icon className="animate-spin" />
+                )}
                 Generate Questions
               </Button>
             </div>
@@ -100,6 +100,19 @@ function RouteComponent() {
       </div>
     );
   }
+
+  console.log("calculating score");
+
+  const score = questionsQuery.data.reduce((acc: number, question: any) => {
+    if (question.is_user_answer_correct) {
+      return acc + 1;
+    }
+    return acc;
+  }, 0);
+
+  const numberOfQuestionsAnswered = questionsQuery.data.filter(
+    (question: any) => question.user_answer !== null
+  ).length;
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -141,13 +154,7 @@ function RouteComponent() {
 
       <div className="space-y-6">
         {questionsQuery.data.map((question: any) => (
-          <Question
-            key={question.id}
-            question={question}
-            topic_id={topic_id}
-            setScore={setScore}
-            setNumberOfQuestionsAnswered={setNumberOfQuestionsAnswered}
-          />
+          <Question key={question.id} question={question} topic_id={topic_id} />
         ))}
       </div>
 

@@ -62,30 +62,34 @@ export default function Topics(props: { pdf_id: number | undefined }) {
       ) : topicsQuery.data.length ? (
         <div>
           <div className="space-y-3">
-            {topicsQuery.data.map((topic: any) => (
-              <Card key={topic.id}>
-                <CardContent>
-                  <h3 className="font-semibold text-gray-900">{topic.title}</h3>
-                  {topic.description && (
-                    <p className="text-gray-600 mt-2 text-xs">
-                      {topic.description}
-                    </p>
-                  )}
-                  <div className="mt-4 space-x-2">
-                    <Link to="/flashcards" search={{ topic_id: topic.id }}>
-                      <Button size="sm" className="rounded-sm">
-                        Flashcards
-                      </Button>
-                    </Link>
-                    <Link to="/questions" search={{ topic_id: topic.id }}>
-                      <Button size="sm" className="rounded-sm">
-                        Questions
-                      </Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+            <div className="grid grid-cols-2 gap-2">
+              {topicsQuery.data.map((topic: any) => (
+                <Card key={topic.id}>
+                  <CardContent>
+                    <h3 className="font-semibold text-gray-900">
+                      {topic.title}
+                    </h3>
+                    {topic.description && (
+                      <p className="text-gray-600 mt-2 text-xs">
+                        {topic.description}
+                      </p>
+                    )}
+                    <div className="mt-4 space-x-2">
+                      <Link to="/flashcards" search={{ topic_id: topic.id }}>
+                        <Button size="sm" className="rounded-sm">
+                          Flashcards
+                        </Button>
+                      </Link>
+                      <Link to="/questions" search={{ topic_id: topic.id }}>
+                        <Button size="sm" className="rounded-sm">
+                          Questions
+                        </Button>
+                      </Link>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
         </div>
       ) : (
