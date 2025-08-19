@@ -1,8 +1,10 @@
 import { Button } from "../ui/button";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Sparkles, Users, Briefcase } from "lucide-react";
-
+import { useContext } from "react";
+import { AuthContext } from "@/context/AuthContext";
 export default function CTA() {
+const { isAuthenticated } = useContext(AuthContext);
   return (
     <div className="mt-24 lg:mx-24 mx-2">
       <div className="relative overflow-hidden rounded-3xl bg-card p-8 lg:p-16 text-foreground border border-border shadow-xl">
@@ -69,16 +71,17 @@ export default function CTA() {
 
           {/* CTA Buttons */}
           <div className="flex flex-col lg:flex-row items-center justify-center gap-4">
-            <Link to="/">
+          { isAuthenticated() ? (
+          <>
+            <Link to="/pdfs">
               <Button
                 size="lg"
                 className="bg-primary text-primary-foreground h-14 !px-8 text-lg font-semibold rounded-full shadow-lg duration-200 group border border-primary hover:bg-primary/90"
               >
                 Generate with Pixel AI
-                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
               </Button>
             </Link>
-            <Link to="/">
+             <Link to="/pdfs">
               <Button
                 size="lg"
                 variant="outline"
@@ -87,6 +90,29 @@ export default function CTA() {
                 Try Quiz Generator
               </Button>
             </Link>
+            </>
+          ) : (
+            <>
+            <Link to="/login">
+              <Button
+                size="lg"
+                className="bg-primary text-primary-foreground h-14 !px-8 text-lg font-semibold rounded-full shadow-lg duration-200 group border border-primary hover:bg-primary/90"
+              >
+                Generate with Pixel AI
+                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
+              </Button>
+            </Link>
+            <Link to="/login">
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-2 border-accent text-primary hover:text-primary h-14 px-8 text-lg font-semibold rounded-full bg-background backdrop-blur-sm"
+              >
+                Try Quiz Generator
+              </Button>
+            </Link>
+            </>
+          )}
           </div>
 
           <p className="text-muted-foreground text-sm mt-6">

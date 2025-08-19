@@ -191,25 +191,7 @@ export default function Footer() {
         </div>
 
         {/* Newsletter Signup */}
-        <div className="mt-16 pt-12 border-t border-border">
-          <div className="bg-primary/10 rounded-2xl p-8 text-center">
-            <h3 className="text-2xl font-bold mb-4">Stay in the Loop</h3>
-            <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-              Get the latest updates on new Pixel AI features, study tips, and
-              platform news delivered to your inbox.
-            </p>
-            <div className="flex flex-col lg:flex-row gap-4 max-w-md mx-auto">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="flex-1 px-4 py-3 rounded-xl bg-background border border-border text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-              />
-              <button className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 rounded-xl font-semibold transition-all duration-200 whitespace-nowrap">
-                Subscribe
-              </button>
-            </div>
-          </div>
-        </div>
+        
       </div>
 
       {/* Bottom Bar */}

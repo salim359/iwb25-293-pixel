@@ -1,8 +1,11 @@
 import { Button } from "../ui/button";
 import { Link } from "@tanstack/react-router";
 import logo from "../../assets/logo.svg";
+import { useContext } from "react";
+import { AuthContext } from "../../context/AuthContext";
 
 export default function Hero() {
+const {isAuthenticated} = useContext(AuthContext);
   return (
     <section
       className="min-h-[70vh] mt-8 flex flex-col items-center justify-center px-0 py-20 gap-16 w-full"
@@ -40,19 +43,38 @@ export default function Hero() {
 
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-          <Link to="/">
-            <Button className="h-12 sm:h-14 w-full sm:w-auto px-8 text-lg font-semibold bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 transform hover:scale-105 hover:shadow-lg shadow">
-              Generate with Pixel AI
-            </Button>
-          </Link>
-          <Link to="/">
-            <Button
-              variant="outline"
-              className="h-12 sm:h-14 w-full sm:w-auto px-8 text-lg font-semibold border-2 border-border hover:border-primary hover:text-primary hover:bg-accent transition-all duration-300"
-            >
-              Try Exam Predictions
-            </Button>
-          </Link>
+          {isAuthenticated() ? (
+            <Link to="/pdfs">
+              <Button className="h-12 sm:h-14 w-full sm:w-auto px-8 text-lg font-semibold bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 transform hover:scale-105 hover:shadow-lg shadow">
+               Generate with Pixel AI
+              </Button>
+            </Link>
+          ) : (
+            <Link to="/login">
+              <Button className="h-12 sm:h-14 w-full sm:w-auto px-8 text-lg font-semibold bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 transform hover:scale-105 hover:shadow-lg shadow">
+                Generate with Pixel AI
+              </Button>
+            </Link>
+          )}
+          {isAuthenticated() ? (
+            <Link to="/pdfs">
+              <Button
+                variant="outline"
+                className="h-12 sm:h-14 w-full sm:w-auto px-8 text-lg font-semibold border-2 border-border hover:border-primary hover:text-primary hover:bg-accent transition-all duration-300"
+              >
+                Try Exam Predictions
+              </Button>
+            </Link>
+          ) : (
+            <Link to="/login">
+              <Button
+                variant="outline"
+                className="h-12 sm:h-14 w-full sm:w-auto px-8 text-lg font-semibold border-2 border-border hover:border-primary hover:text-primary hover:bg-accent transition-all duration-300"
+              >
+                Try Exam Predictions
+              </Button>
+            </Link>
+          )}
         </div>
 
         {/* Trust Indicators */}
