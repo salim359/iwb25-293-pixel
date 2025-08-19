@@ -2,6 +2,7 @@ import ballerina/http;
 import ballerina/jwt;
 import ballerina/sql;
 
+
 public function generateExam(int pdfId, http:Request req) returns json|NotFoundError|UnauthorizedError|error {
 
     jwt:Payload|UnauthorizedError authResult = Authorization(req);
@@ -134,17 +135,11 @@ public function getExam(int pdfId, http:Request req) returns Exam[]|Unauthorized
 }
 
 public function evaluateExam(int pdfId, http:Request req) returns json|UnauthorizedError|error {
-    // jwt:Payload|UnauthorizedError authResult = Authorization(req);
-    // if (authResult is UnauthorizedError) {
-    //     return authResult;
-    // }
-    // int? userId = <int?>authResult["user_id"];
-    // int|sql:Error examId = dbClient->queryRow(`SELECT id FROM exams WHERE pdf_id = ${pdfId} AND user_id = ${userId}`);
-    // if examId is sql:Error {
-    //     // Return empty array instead of NotFoundError when no exam exists
-    //     return [];
-    // }
-
+    jwt:Payload|UnauthorizedError authResult = Authorization(req);
+    if (authResult is UnauthorizedError) {
+        return authResult;
+    }
+  
     // Get the user's answers for the exam
        // Parse answer from request body
     json|error body = req.getJsonPayload();
@@ -157,9 +152,10 @@ public function evaluateExam(int pdfId, http:Request req) returns json|Unauthori
     }
     int questionId = payload.questionId;
     string userAnswer = payload.answer;
+    
 
     // Evaluate the exam
-    string|sql:Error correctAnswers = dbClient->queryRow(`SELECT answer_text FROM exam_question WHERE id = ${questionId}`);
+    string|sql:Error correctAnswers = dbClient->queryRow(`SELECT answer_text FROM exam_question WHERE id = ${questionId} `);
     if correctAnswers is error {
         return error("Failed to retrieve correct answers");
     }
