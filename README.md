@@ -92,24 +92,33 @@ iwb25-293-pixel/
      npm install
      ```
    - For the backend, make sure you have [Ballerina](https://ballerina.io/downloads/) installed. No additional package installation is required; Ballerina will handle dependencies when you run
+   
 2. **Configure API keys and database** in `backend/resources/` and `backend/Config.toml`.  
    You can use `Config.toml.example` as a template and fill in your own
-3. **Generate RSA keys for JWT authentication:**  
+   
+3. **Set up the database:**  
+   Open your terminal, navigate to the `backend/db-setup` folder and run the following command to initialize the database schema:
+   ```
+   mysql -u root -p pixel < init.sql
+   ```
+   This will prompt you for your MySQL password and set up all required tables in the `pixel` database.
+
+4. **Generate RSA keys for JWT authentication:**  
    Run the following commands in your terminal to create `cert.pem` and `private.key` in `backend/resources/`:
    ```
    openssl genrsa -out backend/resources/private.key 2048
    openssl req -new -x509 -key backend/resources/private.key -out backend/resources/cert.pem -days 365
    ```
-4. **Run the backend** using Ballerina:  
+5. **Run the backend** using Ballerina:  
    Open your terminal, navigate to the backend folder and start the server:
    ```
    cd backend
    bal run
    ```
-5. **Run the frontend** using npm or yarn:  
+6. **Run the frontend** using npm or yarn:  
    Open a new terminal, navigate to the frontend folder and start the development server:
    ```
    cd frontend
    npm run dev
    ```
-6. **Access the app** in your browser at the URL shown in the terminal (usually `http://localhost:5173`).
+7. **Access the app** in your browser at the URL shown in the terminal (usually `http://localhost:5173`).
