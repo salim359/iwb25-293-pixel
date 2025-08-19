@@ -6,14 +6,25 @@ Pixel is a full-stack learning platform that helps users upload study materials,
 
 ```
 iwb25-293-pixel/
-├── frontend/           # ReactJS Frontend
-│   ├── public/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   ├── services/   # Frontend API calls
-│   │   └── App.jsx
-│   └── package.json
+├── frontend/           # React + TypeScript Frontend
+│   ├── components.json
+│   ├── index.html
+│   ├── package.json
+│   ├── tailwind.config.js
+│   ├── tsconfig.json
+│   ├── vite.config.js
+│   └── src/
+│       ├── index.css
+│       ├── main.tsx
+│       ├── routeTree.gen.ts
+│       ├── vite-env.d.ts
+│       ├── assets/
+│       ├── components/
+│       ├── constants/
+│       ├── context/
+│       ├── lib/
+│       ├── routes/
+│       └── types/
 │
 ├── backend/            # Ballerina Backend
 │   ├── main.bal        # Main entry point
@@ -45,8 +56,6 @@ iwb25-293-pixel/
 - **Flashcard Generation**: Key terms are converted into flashcards for quick review.
 - **Exam Management**: Users can generate, take, and grade mock exams.
 - **User Management**: Registration, login, and authentication.
-- **Progress Tracking**: Tracks user scores and completion status for quizzes and exams.
-- **Analytics**: Provides learning stats and recommendations.
 - **Content Management**: Organizes uploaded documents, topics, and sections.
 
 ## Database Tables
@@ -72,9 +81,7 @@ iwb25-293-pixel/
 | quiz_generation      | Generate quizzes and questions from extracted text (via AI) |
 | flashcard_generation | Create flashcards from text/key terms                       |
 | exam_management      | Create, serve, and grade mock exams                         |
-| user_management      | User registration, login, authentication                    |
-| progress_tracking    | Track user quiz/exam progress and scores                    |
-| analytics            | Provide learning analytics, stats, recommendations          |
+| user_management      | User registration, login, authentication                    |         |
 | content_management   | Manage uploaded documents, topics, sections                 |
 
 ## Getting Started
@@ -84,5 +91,3 @@ iwb25-293-pixel/
 3. **Run the backend** using Ballerina.
 4. **Run the frontend** using npm or yarn.
 5. **Access the app** via your browser and start learning!
-
-
