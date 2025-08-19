@@ -1,10 +1,10 @@
 // user_functions.bal
 import ballerina/constraint;
 import ballerina/crypto;
-import ballerina/http;
 import ballerina/jwt;
 import ballerina/sql;
 import ballerina/time;
+import  ballerina/http;
 
 public function getAllUsers() returns User[]|error {
     stream<User, sql:Error?> userStream =
@@ -37,8 +37,19 @@ public function createUser(NewUser newUser) returns http:Created|error {
     if validation is error {
         return error("Validation failed: " + error:message(validation));
     }
+    int|sql:Error count = dbClient->queryRow(`SELECT COUNT(*) FROM users WHERE email = ${newUser.email}`);
+    if count is int && count > 0 {
+        return error("Email already exists");
+    }
     string hashed_password = check crypto:hashBcrypt(newUser.password, 14);
-    _ = check dbClient->execute(`INSERT INTO users (username, email, password) VALUES (${newUser.username}, ${newUser.email}, ${hashed_password})`);
+    sql:ExecutionResult|sql:Error insertResult = dbClient->execute(`INSERT INTO users (username, email, password) VALUES (${newUser.username}, ${newUser.email}, ${hashed_password})`);
+    if insertResult is sql:Error {
+        return error("Failed to create user: " + insertResult.message());
+    }
+    int|sql:Error userId = dbClient->queryRow(`SELECT LAST_INSERT_ID()`);
+    if userId is sql:Error {
+        return error("Failed to retrieve user ID");
+    }
     return http:CREATED;
 }
 

@@ -21,6 +21,7 @@ export const Route = createFileRoute("/_auth/questions/")({
 
 function RouteComponent() {
   const { topic_id } = Route.useSearch();
+  console.log(topic_id);
   const { history } = useRouter();
   const queryClient = useQueryClient();
 
@@ -46,7 +47,7 @@ function RouteComponent() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["questions", { topic_id }],
+        queryKey: ["questions", topic_id],
       });
     },
   });

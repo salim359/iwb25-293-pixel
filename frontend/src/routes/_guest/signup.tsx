@@ -39,7 +39,7 @@ function RouteComponent() {
     },
     onError: (error) => {
       console.error("Signup error", error);
-      toast.error("Failed to create account. Please try again.");
+      toast.error("Failed to create account. An account for this email or username already exists.");
     },
     onSuccess: () => {
       toast.success("Account created successfully! Redirecting to login...");
@@ -141,7 +141,7 @@ function RouteComponent() {
               )}
             />
 
-            <Button type="submit">Sign up</Button>
+            <Button type="submit" disabled={signupMutation.isPending}>Sign up</Button>
           </form>
         </Form>
         <div className="flex items-center my-6">
