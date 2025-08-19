@@ -55,7 +55,7 @@ function RouteComponent() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["exam", { pdf_id }],
+        queryKey: ["exam", pdf_id],
       });
     },
   });
@@ -92,14 +92,14 @@ function RouteComponent() {
       );
 
       queryClient.invalidateQueries({
-        queryKey: ["exam", { pdf_id }],
+        queryKey: ["exam", pdf_id],
       });
     },
   });
 
   useEffect(() => {
     if (examQuery.isSuccess) {
-      console.log(examQuery.data);
+      console.log("ffff", examQuery.data);
 
       setQuestions(examQuery.data);
     }
@@ -132,7 +132,7 @@ function RouteComponent() {
     return <Loading message="Loading exam..." />;
   }
 
-  if (examQuery.isError) {
+  if (questions.length === 0) {
     return (
       <div className="min-h-[90vh] flex items-center justify-center">
         <Card className="w-full max-w-md">
