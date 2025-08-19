@@ -85,9 +85,31 @@ iwb25-293-pixel/
 | content_management   | Manage uploaded documents, topics, sections                 |
 
 ## Getting Started
-
-1. **Install dependencies** for both frontend and backend.
-2. **Configure API keys and database** in `backend/resources/` and `backend/config.toml`.
-3. **Run the backend** using Ballerina.
-4. **Run the frontend** using npm or yarn.
-5. **Access the app** via your browser and start learning!
+1. **Install dependencies** for both frontend and backend.  
+   - For the frontend, open your terminal, navigate to the `frontend` folder and run:
+     ```
+     cd frontend
+     npm install
+     ```
+   - For the backend, make sure you have [Ballerina](https://ballerina.io/downloads/) installed. No additional package installation is required; Ballerina will handle dependencies when you run
+2. **Configure API keys and database** in `backend/resources/` and `backend/Config.toml`.  
+   You can use `Config.toml.example` as a template and fill in your own
+3. **Generate RSA keys for JWT authentication:**  
+   Run the following commands in your terminal to create `cert.pem` and `private.key` in `backend/resources/`:
+   ```
+   openssl genrsa -out backend/resources/private.key 2048
+   openssl req -new -x509 -key backend/resources/private.key -out backend/resources/cert.pem -days 365
+   ```
+4. **Run the backend** using Ballerina:  
+   Open your terminal, navigate to the backend folder and start the server:
+   ```
+   cd backend
+   bal run
+   ```
+5. **Run the frontend** using npm or yarn:  
+   Open a new terminal, navigate to the frontend folder and start the development server:
+   ```
+   cd frontend
+   npm run dev
+   ```
+6. **Access the app** in your browser at the URL shown in the terminal (usually `http://localhost:5173`).
