@@ -197,7 +197,7 @@ public function evaluateExam(int pdfId, http:Request req) returns json|Unauthori
     } else {
         // Insert new progress
         _ = check dbClient->execute(
-            `INSERT INTO user_progress (user_id, question_id, score) VALUES (${userId}, ${questionId}, ${score})`
+            `INSERT INTO user_progress (user_id, question_id, score, pdf_id) VALUES (${userId}, ${questionId}, ${score}, ${pdfId})`
         );
     }
      _ = check dbClient->execute(

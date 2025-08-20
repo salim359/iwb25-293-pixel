@@ -42,9 +42,9 @@ function RouteComponent() {
   });
 
   const progressQuery = useQuery({
-    queryKey: ["userProgress"],
+    queryKey: ["userProgress", pdf_id],
     queryFn: async () => {
-      const response = await apiClient.get(`/pixel/users/progress`);
+      const response = await apiClient.get(`/pixel/users/progress/${pdf_id}`);
       return response.data;
     },
   });

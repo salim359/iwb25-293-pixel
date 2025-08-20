@@ -101,8 +101,8 @@ service /pixel on pixelListener {
 
 
     // Retrieve overall user progress
-    resource function get users/progress(http:Request req) returns json|NotFoundError|UnauthorizedError|error {
-        return getuserprogress(req);
+    resource function get users/progress/[int pdfId](http:Request req) returns json|NotFoundError|UnauthorizedError|error {
+        return getuserprogress(pdfId, req);
     }
 
    // Generate exam questions for a PDF

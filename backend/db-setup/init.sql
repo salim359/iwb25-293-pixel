@@ -85,7 +85,9 @@ CREATE TABLE user_progress (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
     question_id INT,
+    pdf_id INT,
     score INT,
     completed_at DATETIME  DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (pdf_id) REFERENCES pdf_documents(id)
 );
