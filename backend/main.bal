@@ -95,8 +95,8 @@ service /pixel on pixelListener {
     }
 
     // Add user progress for a quiz set
-    resource function post quizzes/answer(http:Request req) returns json|UnauthorizedError|NotFoundError|error {
-        return adduserprogress(req);
+    resource function post quizzes/evaluate(http:Request req) returns json|UnauthorizedError|NotFoundError|error {
+        return evaluatequiz(req);
     }
 
 
@@ -105,12 +105,7 @@ service /pixel on pixelListener {
         return getuserprogress(req);
     }
 
-    // Retrieve user progress for a specific quiz set
-    resource function get topics/[int topicId]/quizzes/progress(http:Request req) returns json|NotFoundError|UnauthorizedError|error {
-        return getuserprogressperquizset(topicId, req);
-    }
-   
-    // Generate exam questions for a PDF
+   // Generate exam questions for a PDF
     resource function post pdfs/[int pdfId]/examquestions(http:Request req) returns json|NotFoundError|UnauthorizedError|error? {
         return generateExam(pdfId, req);
     }

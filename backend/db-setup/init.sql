@@ -75,16 +75,17 @@ CREATE TABLE exam_question (
     id INT AUTO_INCREMENT PRIMARY KEY,
     exam_id INT,
     sequence INT,
-    question_text TEXT NOT NULL,
-    answer_text TEXT NOT NULL,
+    question TEXT NOT NULL,
+    answer TEXT NOT NULL,
+    user_answer TEXT,
+    is_user_answer_correct BOOLEAN,
     FOREIGN KEY (exam_id) REFERENCES exams(id)
 );
 CREATE TABLE user_progress (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
-    quiz_id INT,
+    question_id INT,
     score INT,
     completed_at DATETIME  DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (quiz_id) REFERENCES quizzes(id)
 );

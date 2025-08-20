@@ -21,14 +21,14 @@ export default function Question(props: {
     }));
   }
 
-  const isCorrect = props.question.result === "correct";
-  const isDirty = props.question["result"] !== undefined;
+  const isCorrect = props.question.status === true;
+  const isDirty = props.question["status"] !== undefined;
 
   return (
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="text-xl leading-relaxed">
-          {props.question?.question_text}
+          {props.question?.question}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -49,7 +49,7 @@ export default function Question(props: {
             <div>
               {isDirty && (
                 <p className="text-sm text-muted-foreground">
-                  {props.question?.answer_text}
+                  {props.question?.answer}
                 </p>
               )}
             </div>

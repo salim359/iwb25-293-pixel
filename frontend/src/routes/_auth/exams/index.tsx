@@ -142,7 +142,7 @@ function RouteComponent() {
                 No Questions Available
               </h3>
               <p className="text-muted-foreground mb-4">
-                We couldn't find any questions for this topic.
+                We couldn't find any questions for this topics.
               </p>
               <Button
                 onClick={() => generateExamMutation.mutate()}

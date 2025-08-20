@@ -17,8 +17,8 @@ public function generateExam(int pdfId, http:Request req) returns json|NotFoundE
     string prompt = string `Generate 10 exam questions and their answers for the following text as a valid JSON array. Each object must follow this format:
     [
         {   "title": "title of the exam",
-            "question_text": "Your question here?",
-            "answer_text": "Expected answer",
+            "question": "Your question here?",
+            "answer": "Expected answer",
             "sequence": 1
         }
     ]
@@ -84,8 +84,8 @@ public function generateExam(int pdfId, http:Request req) returns json|NotFoundE
 
                     foreach var item in examArray {
                         // Process each exam item
-                        json|error questionJson = item.question_text;
-                        json|error answerJson = item.answer_text;
+                        json|error questionJson = item.question;
+                        json|error answerJson = item.answer;
                         json|error sequenceJson = item.sequence;
 
                         string question = questionJson is string ? questionJson : "";
@@ -93,7 +93,7 @@ public function generateExam(int pdfId, http:Request req) returns json|NotFoundE
                         int sequence = sequenceJson is int ? sequenceJson : 0;
 
                         // Insert exam question
-                        _ = check dbClient->execute(`INSERT INTO exam_question (exam_id, question_text, answer_text, sequence) VALUES (${examId}, ${question}, ${answer}, ${sequence})`);
+                        _ = check dbClient->execute(`INSERT INTO exam_question (exam_id, question, answer, sequence) VALUES (${examId}, ${question}, ${answer}, ${sequence})`);
                     }
                     return <json>{"message": examArray.length().toString() + " exam questions generated and stored", "examId": examId};
                 } else {
@@ -116,10 +116,10 @@ public function getExam(int pdfId, http:Request req) returns Exam[]|Unauthorized
         return authResult;
     }
     int? userId = <int?>authResult["user_id"];
-    int|sql:Error examId = dbClient->queryRow(`SELECT id FROM exams WHERE pdf_id = ${pdfId} AND user_id = ${userId}`);
+    int|sql:Error examId = dbClient->queryRow(`SELECT id FROM exams WHERE pdf_id = ${pdfId} AND user_id = ${userId} ORDER BY id DESC LIMIT 1`);
     if examId is sql:Error {
         // Return empty array instead of NotFoundError when no exam exists
-        return [];
+        return error("exam Id wrong");
     }
    
 
@@ -128,7 +128,7 @@ public function getExam(int pdfId, http:Request req) returns Exam[]|Unauthorized
         select exam;
     if examResult is sql:Error {
         // If no exam questions found, return empty array
-        return [];
+        return error("No exam questions found");
     }
     return examResult;
 
@@ -139,6 +139,7 @@ public function evaluateExam(int pdfId, http:Request req) returns json|Unauthori
     if (authResult is UnauthorizedError) {
         return authResult;
     }
+     int? userId = <int?>authResult["user_id"];
   
     // Get the user's answers for the exam
        // Parse answer from request body
@@ -153,13 +154,12 @@ public function evaluateExam(int pdfId, http:Request req) returns json|Unauthori
     int questionId = payload.questionId;
     string userAnswer = payload.answer;
     
-
     // Evaluate the exam
-    string|sql:Error correctAnswers = dbClient->queryRow(`SELECT answer_text FROM exam_question WHERE id = ${questionId} `);
+    string|sql:Error correctAnswers = dbClient->queryRow(`SELECT answer FROM exam_question WHERE id = ${questionId} `);
     if correctAnswers is error {
         return error("Failed to retrieve correct answers");
     }
-    string|sql:Error questionResult = dbClient->queryRow(`SELECT question_text FROM exam_question WHERE id = ${questionId}`);
+    string|sql:Error questionResult = dbClient->queryRow(`SELECT question FROM exam_question WHERE id = ${questionId}`);
     if questionResult is error {
         return error("Failed to retrieve question text");
     }
@@ -169,11 +169,42 @@ public function evaluateExam(int pdfId, http:Request req) returns json|Unauthori
     // evaluate the answer
     json|error evaluationResult = evaluateAnswer(question, correctAnswer, userAnswer);
     if evaluationResult is error {
-        return error("Failed to evaluate exam: " + evaluationResult.message());
+        return evaluationResult;
     }
+    int score = 0;
+    boolean answerResult = false;
+
     if evaluationResult == "yes" {
-        return {"result": "correct"};
-    } else {
-        return {"result": "incorrect"};
+        score = 10;
+        answerResult = true;
+
     }
+    else {
+        score = 0;
+        answerResult = false;
+    }
+       record {|int count;|}|error countResult = dbClient->queryRow(
+        `SELECT COUNT(*) as count FROM user_progress WHERE user_id = ${userId} AND question_id = ${questionId}`);
+    if countResult is error {
+        return countResult;
+    }
+
+    if countResult.count > 0 {
+        // Update existing progress (add score)
+        _ = check dbClient->execute(
+            `UPDATE user_progress SET score = ${score}, completed_at = CURRENT_TIMESTAMP WHERE user_id = ${userId} AND question_id = ${questionId}`
+        );
+    } else {
+        // Insert new progress
+        _ = check dbClient->execute(
+            `INSERT INTO user_progress (user_id, question_id, score) VALUES (${userId}, ${questionId}, ${score})`
+        );
+    }
+     _ = check dbClient->execute(
+    `UPDATE exam_question SET user_answer = ${userAnswer}, is_user_answer_correct = ${answerResult} WHERE id = ${questionId}`
+    );
+    
+    return {
+        "status": answerResult
+    };
 }

@@ -34,7 +34,7 @@ export default function Question(props: {
         answer,
       });
 
-      const response = await apiClient.post(`/pixel/quizzes/answer`, {
+      const response = await apiClient.post(`/pixel/quizzes/evaluate`, {
         questionId: props.question?.id,
         answer,
       });

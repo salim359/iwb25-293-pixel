@@ -333,7 +333,7 @@ public function getquiz(int questionId, http:Request req) returns Quiz|Unauthori
 
 //per topic
 // after getting 1 question call this with the selected option
-public function adduserprogress(http:Request req) returns json|UnauthorizedError|NotFoundError|error {
+public function evaluatequiz(http:Request req) returns json|UnauthorizedError|NotFoundError|error {
     jwt:Payload|UnauthorizedError authResult = Authorization(req);
     if (authResult is UnauthorizedError) {
         return authResult;
@@ -385,75 +385,32 @@ public function adduserprogress(http:Request req) returns json|UnauthorizedError
         answerResult = false;
     }
     // Check if a progress record exists
-    record {|int count;|}|error countResult = dbClient->queryRow(
-        `SELECT COUNT(*) as count FROM user_progress WHERE user_id = ${userId} AND quiz_id = ${quizId}`);
-    if countResult is error {
-        return countResult;
-    }
+    // record {|int count;|}|error countResult = dbClient->queryRow(
+    //     `SELECT COUNT(*) as count FROM user_progress WHERE user_id = ${userId} AND quiz_id = ${quizId}`);
+    // if countResult is error {
+    //     return countResult;
+    // }
 
-    if countResult.count > 0 {
-        // Update existing progress (add score)
-        _ = check dbClient->execute(
-            `UPDATE user_progress SET score = score + ${score}, completed_at = CURRENT_TIMESTAMP WHERE user_id = ${userId} AND quiz_id = ${quizId}`
-        );
-    } else {
-        // Insert new progress
-        _ = check dbClient->execute(
-            `INSERT INTO user_progress (user_id, quiz_id, score) VALUES (${userId}, ${quizId}, ${score})`
-        );
-    }
+    // if countResult.count > 0 {
+    //     // Update existing progress (add score)
+    //     _ = check dbClient->execute(
+    //         `UPDATE user_progress SET score = score + ${score}, completed_at = CURRENT_TIMESTAMP WHERE user_id = ${userId} AND quiz_id = ${quizId}`
+    //     );
+    // } else {
+    //     // Insert new progress
+    //     _ = check dbClient->execute(
+    //         `INSERT INTO user_progress (user_id, quiz_id, score) VALUES (${userId}, ${quizId}, ${score})`
+    //     );
+    // }
 
     _ = check dbClient->execute(
     `UPDATE questions SET user_answer = ${userAnswer}, is_user_answer_correct = ${answerResult} WHERE id = ${questionId}`
     );
 
     return {
-        "message": "User progress updated successfully",
         "status": answerResult,
         "correct_answer": answer,
         "user_answer": userAnswer
     };
-}
-
-public function getuserprogressperquizset(int topicId, http:Request req) returns json|NotFoundError|UnauthorizedError|error {
-    jwt:Payload|UnauthorizedError authResult = Authorization(req);
-    if (authResult is UnauthorizedError) {
-        return authResult; // UnauthorizedError (includes expiry, invalid, or missing token)
-    }
-    int? userId = <int?>authResult["user_id"];
-    int|NotFoundError quizId = getquizId(topicId);
-    io:println(quizId);
-    if quizId is NotFoundError {
-        return quizId; // NotFoundError if quiz does not exist
-    }
-
-    UserProgress|error userProgress = dbClient->queryRow(`SELECT * FROM user_progress WHERE user_id = ${userId} AND quiz_id = ${quizId}`, UserProgress);
-    if userProgress is error {
-        return {score: 0};
-    }
-    return {score: userProgress.score};
-}
-
-public function getuserprogress(http:Request req) returns json|NotFoundError|UnauthorizedError|error {
-    jwt:Payload|UnauthorizedError authResult = Authorization(req);
-    if (authResult is UnauthorizedError) {
-        return authResult; // UnauthorizedError (includes expiry, invalid, or missing token)
-    }
-    int? userId = <int?>authResult["user_id"];
-    UserProgress|error userProgress = dbClient->queryRow(`SELECT * FROM user_progress WHERE user_id = ${userId}`, UserProgress);
-    if userProgress is error {
-        if userProgress is sql:NoRowsError {
-            NotFoundError userNotFound = {
-                body: {
-                    message: "User progress not found",
-                    details: "No progress exists for the given user ID",
-                    timestamp: time:utcNow()
-                }
-            };
-            return userNotFound;
-        }
-        return userProgress;
-    }
-    return {score: userProgress.score};
 }
 

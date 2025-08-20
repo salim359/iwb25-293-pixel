@@ -111,7 +111,7 @@ public type NotFoundError record {|
 public type UserProgress record {|
     int id;
     int user_id;
-    int quiz_id;
+    int question_id;
     int score;
     string completed_at = time:utcNow().toString();
 |};
@@ -120,7 +120,9 @@ public type AnswerPayload record { int questionId; string answer; };
 public type Exam record {|
     int id;
     int exam_id;
-    string question_text;
-    string answer_text;
+    string question;
+    string answer;
+    string user_answer?;
+    boolean is_user_answer_correct?;
     int sequence;
 |};
