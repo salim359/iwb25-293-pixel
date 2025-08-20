@@ -14,6 +14,7 @@ export default function Question(props: {
   answers: Record<number, string>;
   setAnswers: Dispatch<SetStateAction<Record<number, string>>>;
 }) {
+
   function handleChange(value: string) {
     props.setAnswers((prev) => ({
       ...prev,
@@ -21,8 +22,10 @@ export default function Question(props: {
     }));
   }
 
-  const isCorrect = props.question.status === true;
-  const isDirty = props.question["status"] !== undefined;
+  const isCorrect = props.question.status === true || props.question.is_user_answer_correct === true;
+  const isDirty =
+    props.question["status"] !== undefined ||
+    props.question.is_user_answer_correct !== undefined;
 
   return (
     <Card className="w-full">
@@ -35,7 +38,8 @@ export default function Question(props: {
         <div>
           <div>
             <Textarea
-              value={props.answers[props.question.id] || ""}
+              defaultValue={props.question?.user_answer || ""}
+              value={props.answers[props.question.id]}
               onChange={(e) => handleChange(e.target.value)}
               placeholder="Write your answer here..."
             />

@@ -2,13 +2,12 @@ import Question from "@/components/exams/Question";
 import Loading from "@/components/Loading";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import apiClient from "@/lib/apiClient";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { log } from "console";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { ArrowLeft, BookOpen, Loader2Icon } from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import z from "zod";
 
 const quizSearchSchema = z.object({
@@ -35,7 +34,6 @@ function RouteComponent() {
       const response = await apiClient.get(
         `/pixel/pdfs/${pdf_id}/examquestions`
       );
-      console.log(response.data);
 
       return response.data;
     },
@@ -74,6 +72,7 @@ function RouteComponent() {
       }
 
       const responses = await Promise.all(requests);
+      console.log("all reposnses", responses);
 
       return responses.map((response) => response.data);
     },
@@ -99,14 +98,15 @@ function RouteComponent() {
 
   useEffect(() => {
     if (examQuery.isSuccess) {
-      console.log("ffff", examQuery.data);
-
       setQuestions(examQuery.data);
     }
   }, [examQuery.isSuccess, examQuery.data]);
 
   function handleSubmit() {
-    console.log("exam submitting");
+    if (Object.keys(answers).length === 0) {
+      toast.warning("Please answer at least one question before submitting.");
+      return;
+    }
     evaluateMutations.mutate();
   }
 
@@ -183,7 +183,7 @@ function RouteComponent() {
           <Button
             onClick={() => handleSubmit()}
             disabled={
-              examQuery.data.length !== Object.keys(answers).length ||
+              // examQuery.data.length !== Object.keys(answers).length ||
               evaluateMutations.isPending
             }
           >

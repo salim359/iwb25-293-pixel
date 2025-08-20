@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/form";
 import apiClient from "@/lib/apiClient";
 import { toast } from "sonner";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { AuthContext } from "@/context/AuthContext";
 
 export const Route = createFileRoute("/_guest/login")({
@@ -27,7 +27,7 @@ export const Route = createFileRoute("/_guest/login")({
 
 function RouteComponent() {
   const navigate = useNavigate();
-  const { login } = useContext(AuthContext);
+  const { login, user } = useContext(AuthContext);
 
   const loginMutation = useMutation({
     mutationFn: async (data: z.infer<typeof formSchema>) => {
@@ -43,7 +43,6 @@ function RouteComponent() {
 
     onSuccess: () => {
       toast.success("Logged in successfully! Redirecting...");
-      navigate({ to: "/" });
     },
   });
 
@@ -66,6 +65,12 @@ function RouteComponent() {
       password: "",
     },
   });
+
+    useEffect(() => {
+    if (user) {
+      navigate({ to: "/pdfs" });
+    }
+  }, [user, navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4 animate-fade-in">
